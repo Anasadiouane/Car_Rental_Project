@@ -1,0 +1,6 @@
+package com.AD.Car_Rental_Project.domain.enumeration;
+
+public enum Role {
+    ADMIN,
+    EMPLOYEE
+}
