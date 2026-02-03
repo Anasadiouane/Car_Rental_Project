@@ -19,7 +19,7 @@ public class User {
     private String firstName;
     private String lastName;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String password;
@@ -30,5 +30,6 @@ public class User {
 
     private String photoUrl;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 }
