@@ -4,6 +4,7 @@ import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
 import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 
@@ -31,6 +32,8 @@ public class Notification {
     private RelatedEntityType relatedEntityType;
 
     private boolean seen;
+
+    @CreationTimestamp
     private LocalDate createdAt;
 
     @ManyToOne
