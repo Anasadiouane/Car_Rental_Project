@@ -9,8 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "notifications")
-@Getter @Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,6 +25,7 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     private NotificationType notificationType;
 
+    // Champs génériques pour pointer vers l'entité concernée!
     private Long relatedEntityId;
 
     @Enumerated(EnumType.STRING)

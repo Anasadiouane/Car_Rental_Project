@@ -6,10 +6,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
-@Table(name = "cars")
-@Getter @Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -37,4 +37,11 @@ public class Car {
     private RentalStatus rentalStatus;
     @Enumerated(EnumType.STRING)
     private TechnicalStatus technicalStatus;
+
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL)
+    private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL)
+    private List<Maintenance> maintenances;
+
 }

@@ -8,8 +8,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "payments")
-@Getter @Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -28,6 +27,8 @@ public class Payment {
     private PaymentStatus paymentStatus;
 
     private LocalDate paymentDate;
+
+    private String transactionId; // utile pour carte/transfer
 
     @OneToOne
     @JoinColumn(name = "booking_id")

@@ -4,9 +4,10 @@ import com.AD.Car_Rental_Project.domain.enumeration.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
-@Table(name = "users")
-@Getter @Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -16,20 +17,26 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String firstName;
-    private String lastName;
+    private String fullName;
 
     @Column(unique = true, nullable = false)
     private String email;
 
     private String password;
-
     private String phone;
-
     private boolean active;
-
     private String photoUrl;
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Notification> notifications;
+
+    @OneToMany(mappedBy = "confirmedBy", cascade = CascadeType.ALL)
+    private List<Booking> confirmedBooking;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    private List<Maintenance> createdMaintenances;
+
 }

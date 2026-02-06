@@ -8,8 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "bookings")
-@Getter @Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -25,13 +24,12 @@ public class Booking {
 
     private LocalDate startDate;
     private LocalDate endDate;
-
     private double totalPrice;
 
     @Enumerated(EnumType.STRING)
     private BookingStatus bookingStatus;
 
-    @CreationTimestamp
+    @CreationTimestamp // remove??
     private LocalDate createdAt;
 
     @ManyToOne(optional = false)
@@ -41,4 +39,12 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "confirmed_by")
     private User confirmedBy;
+
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
+    private Contract contract;
+
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
+    private Payment payment;
+
+
 }
