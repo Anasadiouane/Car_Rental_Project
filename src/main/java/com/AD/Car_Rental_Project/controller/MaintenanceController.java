@@ -13,25 +13,5 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MaintenanceController {
 
-    private final MaintenanceService maintenanceService;
 
-    @PostMapping
-    public Maintenance create(@RequestBody Maintenance maintenance) {
-        return maintenanceService.createMaintenance(maintenance);
-    }
-
-    @GetMapping
-    public List<Maintenance> getAll() {
-        return maintenanceService.getAllMaintenances();
-    }
-
-    @GetMapping("/car/{carId}")
-    public List<Maintenance> getByCar(@PathVariable Long carId) {
-        return maintenanceService.getMaintenancesByCar(carId);
-    }
-
-    @GetMapping("/type/{type}")
-    public List<Maintenance> getByType(@PathVariable MaintenanceType type) {
-        return maintenanceService.getMaintenancesByType(type);
-    }
 }

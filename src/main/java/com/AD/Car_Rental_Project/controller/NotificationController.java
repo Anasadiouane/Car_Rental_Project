@@ -12,21 +12,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private final NotificationService notificationService;
 
-    @GetMapping("/user/{userId}")
-    public List<Notification> getUserNotifications(@PathVariable Long userId) {
-        return notificationService.getUserNotifications(userId);
-    }
-
-    @GetMapping("/user/{userId}/unseen")
-    public List<Notification> getUnseen(@PathVariable Long userId) {
-        return notificationService.getUnseenNotifications(userId);
-    }
-
-    @PutMapping("/{id}/seen")
-    public void markAsSeen(@PathVariable Long id) {
-        notificationService.markAsSeen(id);
-    }
 }
 

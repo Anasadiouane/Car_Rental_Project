@@ -2,10 +2,14 @@ package com.AD.Car_Rental_Project.service.impl;
 
 import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.entity.Maintenance;
+import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.MaintenanceType;
+import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
+import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
 import com.AD.Car_Rental_Project.repository.MaintenanceRepository;
 import com.AD.Car_Rental_Project.service.CarService;
 import com.AD.Car_Rental_Project.service.MaintenanceService;
+import com.AD.Car_Rental_Project.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,37 +21,54 @@ import java.util.List;
 public class MaintenanceServiceImpl implements MaintenanceService {
 
     private final MaintenanceRepository maintenanceRepository;
-    private final CarService carService;
+    private final NotificationService notificationService;
 
     @Override
-    public Maintenance createMaintenance(Maintenance maintenance) {
-        maintenance.setMaintenanceDate(LocalDate.now());
+    public Maintenance createMaintenance(Maintenance maintenance, User createdBy) {
+        maintenance.setCreatedBy(createdBy);
 
-        Car car = carService.getCarById(maintenance.getCar().getId());
-
-        if (maintenance.getMaintenanceType() == MaintenanceType.OIL_CHANGE) {
-            car.setLastOilChangeDate(LocalDate.now());
-            car.setLastOilChangeMileage(car.getMileage());
-        }
+        // Internal notification for Admin/Employee when a new maintenance is created
+        notificationService.createNotification(
+                "New maintenance created",
+                "Maintenance of type " + maintenance.getMaintenanceType() +
+                        " has been created for car ID " + maintenance.getCar().getId(),
+                NotificationType.MAINTENANCE_ALERT,
+                maintenance.getId(),
+                RelatedEntityType.CAR,
+                createdBy
+        );
 
         return maintenanceRepository.save(maintenance);
     }
 
+
     @Override
-    public List<Maintenance> getMaintenancesByCar(Long carId) {
-        return maintenanceRepository.findByCar(car);
+    public List<Maintenance> getMaintenanceByCar(Long carId) {
+        return maintenanceRepository.findByCarId(carId);
     }
 
     @Override
-    public List<Maintenance> getUpcomingMaintenances() {
-        return maintenanceRepository.findByNextDueDateBefore(
-                LocalDate.now().plusDays(7)
-        );
+    public List<Maintenance> getMaintenanceByUser(User user) {
+        return maintenanceRepository.findByCreatedBy(user);
     }
 
     @Override
-    public List<Maintenance> getAllMaintenances() {
-        return List.of();
+    public void checkMaintenanceDueDates(LocalDate referenceDate) {
+        // Find all maintenances with due date before the reference date
+        List<Maintenance> maintenances = maintenanceRepository.findByNextDueDateBefore(referenceDate);
+
+        for (Maintenance maintenance : maintenances) {
+            // Internal notification for Admin/Employee
+            notificationService.createNotification(
+                    "Maintenance overdue",
+                    "Maintenance of type " + maintenance.getMaintenanceType() +
+                            " for car " + maintenance.getCar().getPlateNumber() +
+                            " is overdue (due date: " + maintenance.getNextDueDate() + ").",
+                    NotificationType.MAINTENANCE_ALERT,
+                    maintenance.getId(),
+                    RelatedEntityType.CAR,
+                    null
+            );
+        }
     }
 }
-

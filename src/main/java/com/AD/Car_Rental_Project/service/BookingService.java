@@ -1,24 +1,30 @@
 package com.AD.Car_Rental_Project.service;
 
 import com.AD.Car_Rental_Project.domain.entity.Booking;
+import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface BookingService {
 
+    // Create a new booking
     Booking createBooking(Booking booking);
 
-    Booking confirmBooking(Long bookingId, User user);
+    // Confirm a booking (by Admin/Employee)
+    Booking confirmBooking(Long bookingId, User confirmedBy);
 
-    Booking finishBooking(Long bookingId);
+    // Cancel a booking
+    Booking cancelBooking(Long bookingId);
 
-    Booking getBookingById(Long id);
+    // Find bookings by car
+    List<Booking> getBookingsByCar(Car car);
 
-    List<Booking> getAllBookings();
+    // Find bookings by customer CIN
+    List<Booking> getBookingsByCustomerCIN(String customerCIN);
 
-    List<Booking> getBookingsByStatus(BookingStatus status);
-
-    Booking updateBookingStatus(Long id, BookingStatus status);
-}   
+    // Check upcoming booking end dates and notify customers
+    void checkBookingEndDates(LocalDate referenceDate);
+}

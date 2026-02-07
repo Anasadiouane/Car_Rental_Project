@@ -7,21 +7,24 @@ import java.util.List;
 
 public interface CarService {
 
+    // Create a new car
     Car createCar(Car car);
 
-    Car getCarById(Long id);
+    // Update car details
+    Car updateCar(Long carId, Car car);
 
-    Car getByPlateNumber(String plateNumber);
+    // Find car by ID
+    Car getCarById(Long carId);
 
+    // Find all cars
     List<Car> getAllCars();
 
-    List<Car> getAvailableCars();
+    // Check insurance expiry and notify Admin/Employee
+    void checkCarInsuranceExpiry();
 
-    List<Car> getCarsWithExpiredVisit();
+    // Check technical visit expiry and notify Admin/Employee
+    void checkCarVisitExpiry();
 
-    List<Car> getCarsWithExpiredInsurance();
-
-    void delete(Long id);
-
-    Car updateTechnicalStatus(Long id, TechnicalStatus status);
+    // Check oil change status and notify Admin/Employee
+    void checkCarOilChange();
 }

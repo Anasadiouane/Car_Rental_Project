@@ -2,16 +2,23 @@ package com.AD.Car_Rental_Project.service;
 
 import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.entity.Maintenance;
+import com.AD.Car_Rental_Project.domain.entity.User;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface MaintenanceService {
 
-    Maintenance createMaintenance(Maintenance maintenance);
+    // Create a new maintenance record
+    Maintenance createMaintenance(Maintenance maintenance, User createdBy);
 
-    List<Maintenance> getMaintenancesByCar(Car car);
+    // Find maintenance by car ID
+    List<Maintenance> getMaintenanceByCar(Long carId);
 
-    List<Maintenance> getUpcomingMaintenances();
+    // Find maintenance created by a specific user
+    List<Maintenance> getMaintenanceByUser(User user);
 
-    List<Maintenance> getAllMaintenances();
+    // Check upcoming or overdue maintenance and notify Admin/Employee
+    void checkMaintenanceDueDates(LocalDate referenceDate);
 }
+

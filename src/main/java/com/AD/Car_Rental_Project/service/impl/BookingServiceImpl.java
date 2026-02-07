@@ -4,10 +4,13 @@ import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
+import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
+import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
 import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.repository.BookingRepository;
 import com.AD.Car_Rental_Project.service.BookingService;
 import com.AD.Car_Rental_Project.service.CarService;
+import com.AD.Car_Rental_Project.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,56 +22,76 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final CarService carService;
+    private final NotificationService notificationService;
 
     @Override
     public Booking createBooking(Booking booking) {
         booking.setBookingStatus(BookingStatus.PENDING);
         booking.setCreatedAt(LocalDate.now());
-
-        Car car = carService.getCarById(booking.getCar().getId());
-        car.setRentalStatus(RentalStatus.RENTED);
-
         return bookingRepository.save(booking);
     }
 
     @Override
-    public Booking confirmBooking(Long bookingId, User user) {
-        Booking booking = getBookingById(bookingId);
-        booking.setBookingStatus(BookingStatus.CONFIRMED);
-        booking.setConfirmedBy(user);
-        return bookingRepository.save(booking);
+    public Booking confirmBooking(Long bookingId, User confirmedBy) {
+        return bookingRepository.findById(bookingId).map(booking -> {
+            booking.setBookingStatus(BookingStatus.CONFIRMED);
+            booking.setConfirmedBy(confirmedBy);
+
+            // Internal notification for Admin/Employee
+            notificationService.createNotification(
+                    "Booking Confirmed",
+                    "Booking #" + booking.getId() + " has been confirmed.",
+                    NotificationType.BOOKING_END_SOON,
+                    booking.getId(),
+                    RelatedEntityType.BOOKING,
+                    confirmedBy
+            );
+
+            return bookingRepository.save(booking);
+        }).orElseThrow(() -> new RuntimeException("Booking not found"));
+    }
+    @Override
+    public Booking cancelBooking(Long bookingId) {
+        return bookingRepository.findById(bookingId).map(booking -> {
+            booking.setBookingStatus(BookingStatus.CANCELLED);
+
+            // Internal notification for Admin/Employee
+            notificationService.createNotification(
+                    "Booking Cancelled",
+                    "Booking #" + booking.getId() + " has been cancelled.",
+                    NotificationType.MAINTENANCE_ALERT, // could define a specific type later
+                    booking.getId(),
+                    RelatedEntityType.BOOKING,
+                    null
+            );
+
+            return bookingRepository.save(booking);
+        }).orElseThrow(() -> new RuntimeException("Booking not found"));
     }
 
     @Override
-    public Booking finishBooking(Long bookingId) {
-        Booking booking = getBookingById(bookingId);
-        booking.setBookingStatus(BookingStatus.CONFIRMED);
-
-        Car car = booking.getCar();
-        car.setRentalStatus(RentalStatus.AVAILABLE);
-
-        return bookingRepository.save(booking);
+    public List<Booking> getBookingsByCar(Car car) {
+        return bookingRepository.findByCar(car);
     }
 
     @Override
-    public Booking getBookingById(Long id) {
-        return bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+    public List<Booking> getBookingsByCustomerCIN(String customerCIN) {
+        return bookingRepository.findByCustomerCIN(customerCIN);
     }
 
     @Override
-    public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
-    }
+    public void checkBookingEndDates(LocalDate referenceDate) {
+        // Find confirmed bookings ending before the reference date
+        List<Booking> bookings = bookingRepository.findByEndDateBeforeAndBookingStatus(referenceDate, BookingStatus.CONFIRMED);
 
-    @Override
-    public List<Booking> getBookingsByStatus(BookingStatus status) {
-        return List.of();
-    }
-
-    @Override
-    public Booking updateBookingStatus(Long id, BookingStatus status) {
-        return null;
+        for (Booking booking : bookings) {
+            // External notification via WhatsApp to the customer
+            notificationService.sendWhatsAppNotification(
+                    booking.getCustomerPhone(),
+                    "Dear " + booking.getCustomerName() +
+                            ", your booking for car " + booking.getCar().getPlateNumber() +
+                            " will end on " + booking.getEndDate() + ". Please prepare for return."
+            );
+        }
     }
 }

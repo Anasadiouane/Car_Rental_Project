@@ -8,18 +8,27 @@ import java.util.List;
 
 public interface NotificationService {
 
-    Notification create(User user,
-                        String title,
-                        String message,
-                        NotificationType type,
-                        RelatedEntityType relatedEntityType,
-                        Long relatedEntityId);
+    // Retrieve all notifications for a given user
+    List<Notification> getNotificationsForUser(User user);
 
-    List<Notification> getUnread(User user);
+    // Retrieve only unread notifications for a given user
+    List<Notification> getUnreadNotifications(User user);
 
-    long countUnread(User user);
+    // Count unread notifications for a given user
+    long countUnreadNotifications(User user);
 
-    void markAsSeen(Long id);
+    // Mark a notification as seen
+    void markAsSeen(Long notificationId);
 
-    void createSystemNotification(String message);
+    // Create an internal notification (for Admin/Employee)
+    Notification createNotification(String title,
+                                    String message,
+                                    NotificationType type,
+                                    Long relatedEntityId,
+                                    RelatedEntityType relatedEntityType,
+                                    User user);
+
+    // Send an external notification (WhatsApp message to Customer)
+    void sendWhatsAppNotification(String phoneNumber, String message);
 }
+

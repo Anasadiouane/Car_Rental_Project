@@ -12,25 +12,5 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
 
-    @PostMapping
-    public User create(@RequestBody User user) {
-        return userService.createUser(user);
-    }
-
-    @GetMapping
-    public List<User> getAll() {
-        return userService.getAllUsers();
-    }
-
-    @GetMapping("/{id}")
-    public User getById(@PathVariable Long id) {
-        return userService.getUserById(id);
-    }
-
-    @PutMapping("/{id}/activate")
-    public User activate(@PathVariable Long id) {
-        return userService.activateUser(id);
-    }
 }
