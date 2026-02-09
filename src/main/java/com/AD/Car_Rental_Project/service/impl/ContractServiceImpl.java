@@ -1,5 +1,8 @@
 package com.AD.Car_Rental_Project.service.impl;
-
+import com.AD.Car_Rental_Project.domain.entity.User;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfWriter;
+import java.io.FileOutputStream;
 import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Contract;
 import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
@@ -61,4 +64,51 @@ public class ContractServiceImpl implements ContractService {
     public List<Contract> getAllContracts() {
         return contractRepository.findAll();
     }
-}
+
+    public Contract generateContractPdf(Booking booking, String pdfPath, User confirmedBy) {
+        try {
+            Document document = new Document();
+            PdfWriter.getInstance(document, new FileOutputStream(pdfPath));
+            document.open();
+
+            // Titre
+            document.add(new Paragraph("Car Rental Contract", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18)));
+            document.add(new Paragraph(" "));
+
+            // Infos client
+            document.add(new Paragraph("Customer Name: " + booking.getCustomerName()));
+            document.add(new Paragraph("Customer CIN: " + booking.getCustomerCIN()));
+            document.add(new Paragraph("Customer Phone: " + booking.getCustomerPhone()));
+
+            // Infos contrat
+            document.add(new Paragraph("Contract Number: " + booking.getId())); // ou un champ dédié
+            document.add(new Paragraph("Start Date: " + booking.getStartDate()));
+            document.add(new Paragraph("End Date: " + booking.getEndDate()));
+
+            // Infos voiture
+            document.add(new Paragraph("Car: " + booking.getCar().getBrand() + " " + booking.getCar().getModel()));
+            document.add(new Paragraph("Plate Number: " + booking.getCar().getPlateNumber()));
+
+            // Infos utilisateur qui a confirmé
+            document.add(new Paragraph("Confirmed By: " + confirmedBy.getFullName() + " (" + confirmedBy.getRole() + ")"));
+
+            document.add(new Paragraph(" "));
+
+            // Signature
+            document.add(new Paragraph("Customer Signature: __________________________"));
+            document.add(new Paragraph("Agency Signature: __________________________"));
+
+            document.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Retourne l’objet Contract enregistré en DB
+        Contract contract = new Contract();
+        contract.setBooking(booking);
+        contract.setContractNumber(booking.getId()); // ou générer un numéro unique
+        contract.setPdfPath(pdfPath);
+        return contractRepository.save(contract);
+    }
+
+
+    }

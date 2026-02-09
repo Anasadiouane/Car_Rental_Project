@@ -34,12 +34,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAdmins() {
-        return userRepository.findByRole(Role.ADMIN);
-    }
-
-    @Override
     public List<User> getActiveUsers() {
         return userRepository.findByActiveTrue();
     }
+
+    @Override
+    public List<User> getUsersByRole(Role role) { return userRepository.findByRole(role); }
+
 }
