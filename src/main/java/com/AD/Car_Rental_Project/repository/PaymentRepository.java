@@ -6,18 +6,15 @@ import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
-
-    // Find payments by type (CASH, CARD, TRANSFER)
-    List<Payment> findByPaymentType(PaymentType type);
-
-    // Find payments by status (PAID, PARTIAL, UNPAID)
+    Optional<Payment> findByTransactionId(String transactionId);
     List<Payment> findByPaymentStatus(PaymentStatus status);
-
-    // Find payment linked to a booking
-    Optional<Payment> findByBookingId(Long bookingId);
+    List<Payment> findByPaymentType(PaymentType type);
+    List<Payment> findByPaymentDateBetween(LocalDate start, LocalDate end);
+    List<Payment> findByBooking_Id(Long bookingId);
 }

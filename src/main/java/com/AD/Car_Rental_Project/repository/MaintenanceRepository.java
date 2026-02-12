@@ -11,13 +11,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface MaintenanceRepository extends JpaRepository<Maintenance,Long> {
-
-    List<Maintenance> findByCarId(Long carId);
-
-    List<Maintenance> findByCreatedBy(User user);
-
+public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> {
+    List<Maintenance> findByCar_Id(Long carId);
+    List<Maintenance> findByCreatedBy_Id(Long userId);
+    List<Maintenance> findByMaintenanceType(MaintenanceType type);
     List<Maintenance> findByNextDueDateBefore(LocalDate date);
-
-    List<Maintenance> findByMaintenanceType(MaintenanceType maintenanceType);
+    List<Maintenance> findByMaintenanceDateBetween(LocalDate start, LocalDate end);
 }

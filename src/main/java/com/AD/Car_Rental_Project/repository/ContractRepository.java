@@ -8,10 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface ContractRepository extends JpaRepository<Contract, Long> {
-
-    // Find contract by contract number
-    Optional<Contract> findByContractNumber(Long contractNumber);
-
-    // Find contract linked to a booking
-    Optional<Contract> findByBookingId(Long bookingId);
+    Optional<Contract> findByContractNumber(String contractNumber);
+    Optional<Contract> findByBooking_Id(Long bookingId);
 }

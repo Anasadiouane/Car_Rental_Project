@@ -11,18 +11,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface BookingRepository extends JpaRepository<Booking,Long> {
-
-    List<Booking> findByBookingStatus(BookingStatus bookingStatus);
-
-    List<Booking> findByCar(Car car);
-
-    List<Booking> findByConfirmedBy(User user);
-
+public interface BookingRepository extends JpaRepository<Booking, Long> {
+    List<Booking> findByBookingStatus(BookingStatus status);
+    List<Booking> findByCar_Id(Long carId);
     List<Booking> findByCustomerCIN(String customerCIN);
-
     List<Booking> findByStartDateBetween(LocalDate start, LocalDate end);
-
-    List<Booking> findByEndDateBeforeAndBookingStatus(LocalDate date, BookingStatus status);
-
+    List<Booking> findByConfirmedBy_Id(Long userId);
 }
