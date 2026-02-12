@@ -2,41 +2,100 @@ package com.AD.Car_Rental_Project.domain.entity;
 
 import com.AD.Car_Rental_Project.domain.enumeration.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * User entity representing system users (Admin, Employee, Customer).
+ * Contains authentication details, profile info, and relationships to bookings, notifications, and maintenances.
+ */
 @Entity
-@Data
+@Table(name = "users",
+        indexes = {
+                @Index(name = "idx_user_email", columnList = "email", unique = true)
+        })
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
+    // ================= Primary Key =================
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ================= Basic Info =================
+    @NotBlank
+    @Column(nullable = false, length = 100)
     private String fullName;
 
-    @Column(unique = true, nullable = false)
+    @Email
+    @NotBlank
+    @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    private String password;
+    @NotBlank
+    @Column(nullable = false)
+    private String password; // ⚠️ à encoder avec BCrypt avant stockage
+
+    @Column(length = 20)
     private String phone;
-    private boolean active;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(length = 500)
     private String photoUrl;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
     private Role role;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Notification> notifications;
+    // ================= Audit =================
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "confirmedBy", cascade = CascadeType.ALL)
-    private List<Booking> confirmedBooking;
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
-    private List<Maintenance> createdMaintenances;
+    // ================= Relationships =================
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Notification> notifications = new ArrayList<>();
 
+    @OneToMany(mappedBy = "confirmedBy", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Booking> confirmedBookings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Maintenance> createdMaintenances = new ArrayList<>();
+
+    // ================= Equals & HashCode =================
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
