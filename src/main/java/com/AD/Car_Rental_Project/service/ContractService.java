@@ -1,22 +1,23 @@
 package com.AD.Car_Rental_Project.service;
 
-import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Contract;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ContractService {
 
-    // Generate a new contract for a booking
-    Contract generateContract(Booking booking, String pdfPath);
+    // ====== Core Operations ======
+    Contract createContract(Long bookingId);
 
-    // Find contract by ID
-    Contract getContractById(Long contractId);
+    Optional<Contract> findById(Long id);
 
-    // Find contract by booking ID
-    Contract getContractByBooking(Long bookingId);
+    Optional<Contract> findByContractNumber(String contractNumber);
 
-    // Find all contracts
-    List<Contract> getAllContracts();
+    List<Contract> findAll();
+
+    void deleteContract(Long id);
+
+    // ====== PDF Generation ======
+    byte[] generateContractPdf(Long contractId);
 }
-

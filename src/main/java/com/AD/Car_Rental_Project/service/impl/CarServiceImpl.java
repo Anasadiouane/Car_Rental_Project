@@ -1,117 +1,97 @@
 package com.AD.Car_Rental_Project.service.impl;
 
 import com.AD.Car_Rental_Project.domain.entity.Car;
-import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
-import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
 import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.TechnicalStatus;
 import com.AD.Car_Rental_Project.repository.CarRepository;
 import com.AD.Car_Rental_Project.service.CarService;
-import com.AD.Car_Rental_Project.service.NotificationService;
-import lombok.RequiredArgsConstructor;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class CarServiceImpl implements CarService {
 
     private final CarRepository carRepository;
-    private final NotificationService notificationService;
 
+    public CarServiceImpl(CarRepository carRepository) {
+        this.carRepository = carRepository;
+    }
+
+    // ====== Core Operations ======
     @Override
     public Car createCar(Car car) {
         return carRepository.save(car);
     }
 
     @Override
-    public Car updateCar(Long carId, Car car) {
-        return carRepository.findById(carId).map(existingCar -> {
-            existingCar.setBrand(car.getBrand());
-            existingCar.setModel(car.getModel());
-            existingCar.setYear(car.getYear());
-            existingCar.setPlateNumber(car.getPlateNumber());
-            existingCar.setPricePerDay(car.getPricePerDay());
-            existingCar.setMileage(car.getMileage());
-            existingCar.setRentalStatus(car.getRentalStatus());
-            existingCar.setTechnicalStatus(car.getTechnicalStatus());
-            existingCar.setInsuranceExpiryDate(car.getInsuranceExpiryDate());
-            existingCar.setVisitExpiryDate(car.getVisitExpiryDate());
-            existingCar.setLastOilChangeDate(car.getLastOilChangeDate());
-            existingCar.setLastOilChangeMileage(car.getLastOilChangeMileage());
-            return carRepository.save(existingCar);
-        }).orElseThrow(() -> new RuntimeException("Car not found"));
+    public Car updateCar(Long id, Car car) {
+        Car existingCar = carRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Car not found"));
+
+        existingCar.setBrand(car.getBrand());
+        existingCar.setModel(car.getModel());
+        existingCar.setYear(car.getYear());
+        existingCar.setPlateNumber(car.getPlateNumber());
+        existingCar.setPricePerDay(car.getPricePerDay());
+        existingCar.setMileage(car.getMileage());
+        existingCar.setLastOilChangeDate(car.getLastOilChangeDate());
+        existingCar.setLastOilChangeMileage(car.getLastOilChangeMileage());
+        existingCar.setVisitExpiryDate(car.getVisitExpiryDate());
+        existingCar.setInsuranceExpiryDate(car.getInsuranceExpiryDate());
+        existingCar.setRentalStatus(car.getRentalStatus());
+        existingCar.setTechnicalStatus(car.getTechnicalStatus());
+
+        return carRepository.save(existingCar);
     }
 
     @Override
-    public Car getCarById(Long carId) {
-        return carRepository.findById(carId)
-                .orElseThrow(() -> new RuntimeException("Car not found"));
+    public void deleteCar(Long id) {
+        carRepository.deleteById(id);
     }
 
     @Override
-    public List<Car> getAllCars() {
+    public Optional<Car> findById(Long id) {
+        return carRepository.findById(id);
+    }
+
+    @Override
+    public List<Car> findAll() {
         return carRepository.findAll();
     }
 
+    // ====== Search Methods ======
     @Override
-    public void checkCarInsuranceExpiry() {
-        LocalDate today = LocalDate.now();
-        List<Car> cars = carRepository.findByInsuranceExpiryDateBefore(today);
-
-        for (Car car : cars) {
-            notificationService.createNotification(
-                    "Insurance expired",
-                    "Car " + car.getPlateNumber() + " has expired insurance.",
-                    NotificationType.INSURANCE_EXPIRED,
-                    car.getId(),
-                    RelatedEntityType.CAR,
-                    null
-            );
-        }
+    public Optional<Car> findByPlateNumber(String plateNumber) {
+        return carRepository.findByPlateNumber(plateNumber);
     }
 
     @Override
-    public void checkCarVisitExpiry() {
-        LocalDate today = LocalDate.now();
-        List<Car> cars = carRepository.findByVisitExpiryDateBefore(today);
-
-        for (Car car : cars) {
-            notificationService.createNotification(
-                    "Technical visit expired",
-                    "Car " + car.getPlateNumber() + " has expired technical visit.",
-                    NotificationType.VISIT_EXPIRED,
-                    car.getId(),
-                    RelatedEntityType.CAR,
-                    null
-            );
-        }
+    public List<Car> findByRentalStatus(RentalStatus status) {
+        return carRepository.findByRentalStatus(status);
     }
 
     @Override
-    public void checkCarOilChange() {
-        LocalDate today = LocalDate.now();
-        List<Car> cars = carRepository.findAll();
+    public List<Car> findByTechnicalStatus(TechnicalStatus status) {
+        return carRepository.findByTechnicalStatus(status);
+    }
 
-        for (Car car : cars) {
-            boolean overdueByDate = car.getLastOilChangeDate() != null &&
-                    car.getLastOilChangeDate().plusMonths(6).isBefore(today);
+    @Override
+    public List<Car> findByBrand(String brand) {
+        return carRepository.findByBrandIgnoreCase(brand);
+    }
 
-            boolean overdueByMileage = car.getLastOilChangeMileage() > 0 &&
-                    (car.getMileage() - car.getLastOilChangeMileage()) > 10000;
+    @Override
+    public List<Car> findByModel(String model) {
+        return carRepository.findByModelIgnoreCase(model);
+    }
 
-            if (overdueByDate || overdueByMileage) {
-                notificationService.createNotification(
-                        "Oil change required",
-                        "Car " + car.getPlateNumber() + " needs an oil change.",
-                        NotificationType.OIL_CHANGE_EXPIRED,
-                        car.getId(),
-                        RelatedEntityType.CAR,
-                        null
-                );
-            }
-        }
+    @Override
+    public List<Car> findByPricePerDayLessThanEqual(BigDecimal maxPrice) {
+        return carRepository.findByPricePerDayLessThanEqual(maxPrice);
     }
 }

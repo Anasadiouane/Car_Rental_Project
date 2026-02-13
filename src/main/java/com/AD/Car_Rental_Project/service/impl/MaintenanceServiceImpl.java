@@ -4,71 +4,99 @@ import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.entity.Maintenance;
 import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.MaintenanceType;
-import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
-import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
+import com.AD.Car_Rental_Project.repository.CarRepository;
 import com.AD.Car_Rental_Project.repository.MaintenanceRepository;
-import com.AD.Car_Rental_Project.service.CarService;
+import com.AD.Car_Rental_Project.repository.UserRepository;
 import com.AD.Car_Rental_Project.service.MaintenanceService;
-import com.AD.Car_Rental_Project.service.NotificationService;
-import lombok.RequiredArgsConstructor;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class MaintenanceServiceImpl implements MaintenanceService {
 
     private final MaintenanceRepository maintenanceRepository;
-    private final NotificationService notificationService;
+    private final CarRepository carRepository;
+    private final UserRepository userRepository;
 
+    public MaintenanceServiceImpl(MaintenanceRepository maintenanceRepository,
+                                  CarRepository carRepository,
+                                  UserRepository userRepository) {
+        this.maintenanceRepository = maintenanceRepository;
+        this.carRepository = carRepository;
+        this.userRepository = userRepository;
+    }
+
+    // ====== Core Operations ======
     @Override
-    public Maintenance createMaintenance(Maintenance maintenance, User createdBy) {
-        maintenance.setCreatedBy(createdBy);
+    public Maintenance createMaintenance(Long carId, Long userId, Maintenance maintenance) {
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new IllegalArgumentException("Car not found"));
 
-        // Internal notification for Admin/Employee when a new maintenance is created
-        notificationService.createNotification(
-                "New maintenance created",
-                "Maintenance of type " + maintenance.getMaintenanceType() +
-                        " has been created for car ID " + maintenance.getCar().getId(),
-                NotificationType.MAINTENANCE_ALERT,
-                maintenance.getId(),
-                RelatedEntityType.CAR,
-                createdBy
-        );
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        maintenance.setCar(car);
+        maintenance.setCreatedBy(user);
 
         return maintenanceRepository.save(maintenance);
     }
 
-
     @Override
-    public List<Maintenance> getMaintenanceByCar(Long carId) {
-        return maintenanceRepository.findByCarId(carId);
+    public Maintenance updateMaintenance(Long id, Maintenance maintenance) {
+        Maintenance existing = maintenanceRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Maintenance not found"));
+
+        existing.setMaintenanceType(maintenance.getMaintenanceType());
+        existing.setNote(maintenance.getNote());
+        existing.setMaintenanceDate(maintenance.getMaintenanceDate());
+        existing.setNextDueDate(maintenance.getNextDueDate());
+
+        return maintenanceRepository.save(existing);
     }
 
     @Override
-    public List<Maintenance> getMaintenanceByUser(User user) {
-        return maintenanceRepository.findByCreatedBy(user);
+    public void deleteMaintenance(Long id) {
+        maintenanceRepository.deleteById(id);
     }
 
     @Override
-    public void checkMaintenanceDueDates(LocalDate referenceDate) {
-        // Find all maintenances with due date before the reference date
-        List<Maintenance> maintenances = maintenanceRepository.findByNextDueDateBefore(referenceDate);
+    public Optional<Maintenance> findById(Long id) {
+        return maintenanceRepository.findById(id);
+    }
 
-        for (Maintenance maintenance : maintenances) {
-            // Internal notification for Admin/Employee
-            notificationService.createNotification(
-                    "Maintenance overdue",
-                    "Maintenance of type " + maintenance.getMaintenanceType() +
-                            " for car " + maintenance.getCar().getPlateNumber() +
-                            " is overdue (due date: " + maintenance.getNextDueDate() + ").",
-                    NotificationType.MAINTENANCE_ALERT,
-                    maintenance.getId(),
-                    RelatedEntityType.CAR,
-                    null
-            );
-        }
+    @Override
+    public List<Maintenance> findAll() {
+        return maintenanceRepository.findAll();
+    }
+
+    // ====== Search Methods ======
+    @Override
+    public List<Maintenance> findByCar(Long carId) {
+        return maintenanceRepository.findByCar_Id(carId);
+    }
+
+    @Override
+    public List<Maintenance> findByUser(Long userId) {
+        return maintenanceRepository.findByCreatedBy_Id(userId);
+    }
+
+    @Override
+    public List<Maintenance> findByType(MaintenanceType type) {
+        return maintenanceRepository.findByMaintenanceType(type);
+    }
+
+    @Override
+    public List<Maintenance> findByDateRange(LocalDate start, LocalDate end) {
+        return maintenanceRepository.findByMaintenanceDateBetween(start, end);
+    }
+
+    @Override
+    public List<Maintenance> findByNextDueDateBefore(LocalDate date) {
+        return maintenanceRepository.findByNextDueDateBefore(date);
     }
 }

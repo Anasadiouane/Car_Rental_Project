@@ -8,13 +8,23 @@ import java.util.Optional;
 
 public interface UserService {
 
+    // ====== Core Operations ======
     User createUser(User user);
 
-    User getById(Long id);
+    User updateUser(Long id, User user);
 
-    Optional<User> getByEmail(String email);
+    void deleteUser(Long id);
 
-    List<User> getActiveUsers();
+    Optional<User> findById(Long id);
 
-    List<User> getUsersByRole(Role role);
+    List<User> findAll();
+
+    // ====== Search Methods ======
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findByPhone(String phone);
+
+    List<User> findByRole(Role role);
+
+    List<User> findByRoleIn(List<Role> roles);
 }

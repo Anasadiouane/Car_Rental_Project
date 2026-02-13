@@ -2,97 +2,87 @@ package com.AD.Car_Rental_Project.service.impl;
 
 import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Payment;
-import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
-import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
+import com.AD.Car_Rental_Project.repository.BookingRepository;
 import com.AD.Car_Rental_Project.repository.PaymentRepository;
-import com.AD.Car_Rental_Project.service.NotificationService;
 import com.AD.Car_Rental_Project.service.PaymentService;
-import lombok.RequiredArgsConstructor;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final NotificationService notificationService;
+    private final BookingRepository bookingRepository;
 
+    public PaymentServiceImpl(PaymentRepository paymentRepository,
+                              BookingRepository bookingRepository) {
+        this.paymentRepository = paymentRepository;
+        this.bookingRepository = bookingRepository;
+    }
+
+    // ====== Core Operations ======
     @Override
-    public Payment createPayment(Payment payment, Booking booking) {
-        payment.setBooking(booking);
-        payment.setPaymentDate(LocalDate.now());
+    public Payment createPayment(Long bookingId, PaymentType type) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
-        // Internal notification for Admin/Employee when a new payment is created
-        notificationService.createNotification(
-                "New payment recorded",
-                "Payment of " + payment.getAmount() + " for booking #" + booking.getId() +
-                        " has been recorded.",
-                NotificationType.MAINTENANCE_ALERT, // could define a specific PAYMENT type later
-                booking.getId(),
-                RelatedEntityType.BOOKING,
-                null
-        );
+        Payment payment = Payment.builder()
+                .booking(booking)
+                .amount(booking.getTotalPrice())
+                .paymentType(type)
+                .paymentStatus(PaymentStatus.PAID)
+                .paymentDate(LocalDate.now())
+                .transactionId("TX-" + booking.getId() + "-" + System.currentTimeMillis())
+                .build();
 
         return paymentRepository.save(payment);
     }
 
     @Override
-    public Payment updatePaymentStatus(Long paymentId, PaymentStatus status) {
-        return paymentRepository.findById(paymentId).map(payment -> {
-            payment.setPaymentStatus(status);
-
-            // Notify Admin/Employee if payment is unpaid or partial
-            if (status == PaymentStatus.UNPAID || status == PaymentStatus.PARTIAL) {
-                notificationService.createNotification(
-                        "Payment issue",
-                        "Payment for booking #" + payment.getBooking().getId() +
-                                " is marked as " + status,
-                        NotificationType.MAINTENANCE_ALERT, // could define PAYMENT_FAILED type
-                        payment.getBooking().getId(),
-                        RelatedEntityType.BOOKING,
-                        null
-                );
-            }
-
-            return paymentRepository.save(payment);
-        }).orElseThrow(() -> new RuntimeException("Payment not found"));
+    public Optional<Payment> findById(Long id) {
+        return paymentRepository.findById(id);
     }
 
     @Override
-    public Payment getPaymentByBooking(Long bookingId) {
-        return paymentRepository.findByBookingId(bookingId)
-                .orElseThrow(() -> new RuntimeException("Payment not found for booking"));
+    public Optional<Payment> findByTransactionId(String transactionId) {
+        return paymentRepository.findByTransactionId(transactionId);
     }
 
     @Override
-    public List<Payment> getPaymentsByType(PaymentType type) {
-        return paymentRepository.findByPaymentType(type);
+    public List<Payment> findAll() {
+        return paymentRepository.findAll();
     }
 
     @Override
-    public List<Payment> getPaymentsByStatus(PaymentStatus status) {
+    public void deletePayment(Long id) {
+        paymentRepository.deleteById(id);
+    }
+
+    // ====== Search Methods ======
+    @Override
+    public List<Payment> findByStatus(PaymentStatus status) {
         return paymentRepository.findByPaymentStatus(status);
     }
 
     @Override
-    public void checkUnpaidPayments() {
-        List<Payment> unpaidPayments = paymentRepository.findByPaymentStatus(PaymentStatus.UNPAID);
+    public List<Payment> findByType(PaymentType type) {
+        return paymentRepository.findByPaymentType(type);
+    }
 
-        for (Payment payment : unpaidPayments) {
-            notificationService.createNotification(
-                    "Unpaid payment",
-                    "Payment for booking #" + payment.getBooking().getId() +
-                            " is still unpaid.",
-                    NotificationType.MAINTENANCE_ALERT, // could define PAYMENT_UNPAID type
-                    payment.getBooking().getId(),
-                    RelatedEntityType.BOOKING,
-                    null
-            );
-        }
+    @Override
+    public List<Payment> findByDateRange(LocalDate start, LocalDate end) {
+        return paymentRepository.findByPaymentDateBetween(start, end);
+    }
+
+    @Override
+    public List<Payment> findByBooking(Long bookingId) {
+        return paymentRepository.findByBooking_Id(bookingId);
     }
 }

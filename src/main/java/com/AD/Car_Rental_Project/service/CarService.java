@@ -1,30 +1,36 @@
 package com.AD.Car_Rental_Project.service;
 
 import com.AD.Car_Rental_Project.domain.entity.Car;
+import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.TechnicalStatus;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface CarService {
 
-    // Create a new car
+    // ====== Core Operations ======
     Car createCar(Car car);
 
-    // Update car details
-    Car updateCar(Long carId, Car car);
+    Car updateCar(Long id, Car car);
 
-    // Find car by ID
-    Car getCarById(Long carId);
+    void deleteCar(Long id);
 
-    // Find all cars
-    List<Car> getAllCars();
+    Optional<Car> findById(Long id);
 
-    // Check insurance expiry and notify Admin/Employee
-    void checkCarInsuranceExpiry();
+    List<Car> findAll();
 
-    // Check technical visit expiry and notify Admin/Employee
-    void checkCarVisitExpiry();
+    // ====== Search Methods ======
+    Optional<Car> findByPlateNumber(String plateNumber);
 
-    // Check oil change status and notify Admin/Employee
-    void checkCarOilChange();
+    List<Car> findByRentalStatus(RentalStatus status);
+
+    List<Car> findByTechnicalStatus(TechnicalStatus status);
+
+    List<Car> findByBrand(String brand);
+
+    List<Car> findByModel(String model);
+
+    List<Car> findByPricePerDayLessThanEqual(BigDecimal maxPrice);
 }

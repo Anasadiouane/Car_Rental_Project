@@ -12,9 +12,20 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    List<Notification> findByUser_Id(Long userId);
-    List<Notification> findBySeenFalse();
+    // Récupérer toutes les notifications d’un utilisateur, triées par date
+    List<Notification> findByUserOrderByCreatedAt(User user);
+
+    // Récupérer toutes les notifications non vues d’un utilisateur
+    List<Notification> findByUserAndSeenFalse(User user, boolean seen);
+
+    // Compter combien de notifications non vues pour un utilisateur
+    long countByUserAndSeenFalse(User user);
+
+    // Recherche par type
     List<Notification> findByNotificationType(NotificationType type);
-    List<Notification> findByRelatedEntityType(RelatedEntityType type);
+
+    // Recherche par date de création
     List<Notification> findByCreatedAtAfter(LocalDateTime dateTime);
+
+
 }

@@ -1,24 +1,33 @@
 package com.AD.Car_Rental_Project.service;
 
-import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.entity.Maintenance;
-import com.AD.Car_Rental_Project.domain.entity.User;
+import com.AD.Car_Rental_Project.domain.enumeration.MaintenanceType;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface MaintenanceService {
 
-    // Create a new maintenance record
-    Maintenance createMaintenance(Maintenance maintenance, User createdBy);
+    // ====== Core Operations ======
+    Maintenance createMaintenance(Long carId, Long userId, Maintenance maintenance);
 
-    // Find maintenance by car ID
-    List<Maintenance> getMaintenanceByCar(Long carId);
+    Maintenance updateMaintenance(Long id, Maintenance maintenance);
 
-    // Find maintenance created by a specific user
-    List<Maintenance> getMaintenanceByUser(User user);
+    void deleteMaintenance(Long id);
 
-    // Check upcoming or overdue maintenance and notify Admin/Employee
-    void checkMaintenanceDueDates(LocalDate referenceDate);
+    Optional<Maintenance> findById(Long id);
+
+    List<Maintenance> findAll();
+
+    // ====== Search Methods ======
+    List<Maintenance> findByCar(Long carId);
+
+    List<Maintenance> findByUser(Long userId);
+
+    List<Maintenance> findByType(MaintenanceType type);
+
+    List<Maintenance> findByDateRange(LocalDate start, LocalDate end);
+
+    List<Maintenance> findByNextDueDateBefore(LocalDate date);
 }
-

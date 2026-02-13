@@ -1,29 +1,32 @@
 package com.AD.Car_Rental_Project.service;
 
-import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Payment;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface PaymentService {
 
-    // Create a new payment for a booking
-    Payment createPayment(Payment payment, Booking booking);
+    // ====== Core Operations ======
+    Payment createPayment(Long bookingId, PaymentType type);
 
-    // Update payment status
-    Payment updatePaymentStatus(Long paymentId, PaymentStatus status);
+    Optional<Payment> findById(Long id);
 
-    // Find payment by booking ID
-    Payment getPaymentByBooking(Long bookingId);
+    Optional<Payment> findByTransactionId(String transactionId);
 
-    // Find payments by type
-    List<Payment> getPaymentsByType(PaymentType type);
+    List<Payment> findAll();
 
-    // Find payments by status
-    List<Payment> getPaymentsByStatus(PaymentStatus status);
+    void deletePayment(Long id);
 
-    // Check unpaid or failed payments and notify Admin/Employee
-    void checkUnpaidPayments();
+    // ====== Search Methods ======
+    List<Payment> findByStatus(PaymentStatus status);
+
+    List<Payment> findByType(PaymentType type);
+
+    List<Payment> findByDateRange(LocalDate start, LocalDate end);
+
+    List<Payment> findByBooking(Long bookingId);
 }
