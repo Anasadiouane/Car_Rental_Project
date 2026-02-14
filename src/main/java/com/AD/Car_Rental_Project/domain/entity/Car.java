@@ -85,6 +85,9 @@ public class Car implements Serializable {
     @Column(nullable = false, length = 30)
     private TechnicalStatus technicalStatus;
 
+    @Column(length = 500)
+    private String photoUrl;
+
     // ================= Audit =================
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -1,13 +1,17 @@
 package com.AD.Car_Rental_Project.controller;
 
+import com.AD.Car_Rental_Project.domain.dto.request.MaintenanceRequestDTO;
+import com.AD.Car_Rental_Project.domain.dto.response.MaintenanceResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.Maintenance;
 import com.AD.Car_Rental_Project.domain.enumeration.MaintenanceType;
+
 import com.AD.Car_Rental_Project.service.MaintenanceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/maintenances")
@@ -20,18 +24,30 @@ public class MaintenanceController {
     }
 
     // ================= Create Maintenance =================
-    @PostMapping("/car/{carId}/user/{userId}")
-    public ResponseEntity<Maintenance> createMaintenance(@PathVariable Long carId,
-                                                         @PathVariable Long userId,
-                                                         @RequestBody Maintenance maintenance) {
-        return ResponseEntity.ok(maintenanceService.createMaintenance(carId, userId, maintenance));
+    @PostMapping
+    public ResponseEntity<MaintenanceResponseDTO> createMaintenance(@RequestBody MaintenanceRequestDTO request) {
+        Maintenance maintenance = new Maintenance();
+        maintenance.setMaintenanceType(request.getMaintenanceType());
+        maintenance.setNote(request.getNote());
+        maintenance.setMaintenanceDate(request.getMaintenanceDate());
+        maintenance.setNextDueDate(request.getNextDueDate());
+
+        Maintenance saved = maintenanceService.createMaintenance(request.getCarId(), request.getUserId(), maintenance);
+        return ResponseEntity.ok(toDto(saved));
     }
 
     // ================= Update Maintenance =================
     @PutMapping("/{id}")
-    public ResponseEntity<Maintenance> updateMaintenance(@PathVariable Long id,
-                                                         @RequestBody Maintenance maintenance) {
-        return ResponseEntity.ok(maintenanceService.updateMaintenance(id, maintenance));
+    public ResponseEntity<MaintenanceResponseDTO> updateMaintenance(@PathVariable Long id,
+                                                                    @RequestBody MaintenanceRequestDTO request) {
+        Maintenance maintenance = new Maintenance();
+        maintenance.setMaintenanceType(request.getMaintenanceType());
+        maintenance.setNote(request.getNote());
+        maintenance.setMaintenanceDate(request.getMaintenanceDate());
+        maintenance.setNextDueDate(request.getNextDueDate());
+
+        Maintenance updated = maintenanceService.updateMaintenance(id, maintenance);
+        return ResponseEntity.ok(toDto(updated));
     }
 
     // ================= Delete Maintenance =================
@@ -43,42 +59,85 @@ public class MaintenanceController {
 
     // ================= Get Maintenance by ID =================
     @GetMapping("/{id}")
-    public ResponseEntity<Maintenance> getMaintenanceById(@PathVariable Long id) {
+    public ResponseEntity<MaintenanceResponseDTO> getMaintenanceById(@PathVariable Long id) {
         return maintenanceService.findById(id)
+                .map(this::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // ================= Get All Maintenances =================
     @GetMapping
-    public ResponseEntity<List<Maintenance>> getAllMaintenances() {
-        return ResponseEntity.ok(maintenanceService.findAll());
+    public ResponseEntity<List<MaintenanceResponseDTO>> getAllMaintenances() {
+        return ResponseEntity.ok(
+                maintenanceService.findAll().stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     // ================= Search Methods =================
     @GetMapping("/car/{carId}")
-    public ResponseEntity<List<Maintenance>> getMaintenancesByCar(@PathVariable Long carId) {
-        return ResponseEntity.ok(maintenanceService.findByCar(carId));
+    public ResponseEntity<List<MaintenanceResponseDTO>> getMaintenancesByCar(@PathVariable Long carId) {
+        return ResponseEntity.ok(
+                maintenanceService.findByCar(carId).stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Maintenance>> getMaintenancesByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(maintenanceService.findByUser(userId));
+    public ResponseEntity<List<MaintenanceResponseDTO>> getMaintenancesByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(
+                maintenanceService.findByUser(userId).stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<Maintenance>> getMaintenancesByType(@PathVariable MaintenanceType type) {
-        return ResponseEntity.ok(maintenanceService.findByType(type));
+    public ResponseEntity<List<MaintenanceResponseDTO>> getMaintenancesByType(@PathVariable MaintenanceType type) {
+        return ResponseEntity.ok(
+                maintenanceService.findByType(type).stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/dates")
-    public ResponseEntity<List<Maintenance>> getMaintenancesByDateRange(@RequestParam LocalDate start,
-                                                                        @RequestParam LocalDate end) {
-        return ResponseEntity.ok(maintenanceService.findByDateRange(start, end));
+    public ResponseEntity<List<MaintenanceResponseDTO>> getMaintenancesByDateRange(@RequestParam LocalDate start,
+                                                                                   @RequestParam LocalDate end) {
+        return ResponseEntity.ok(
+                maintenanceService.findByDateRange(start, end).stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/due")
-    public ResponseEntity<List<Maintenance>> getMaintenancesByNextDueDate(@RequestParam LocalDate date) {
-        return ResponseEntity.ok(maintenanceService.findByNextDueDateBefore(date));
+    public ResponseEntity<List<MaintenanceResponseDTO>> getMaintenancesByNextDueDate(@RequestParam LocalDate date) {
+        return ResponseEntity.ok(
+                maintenanceService.findByNextDueDateBefore(date).stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    // ================= Mapping utilitaire =================
+    private MaintenanceResponseDTO toDto(Maintenance maintenance) {
+        MaintenanceResponseDTO dto = new MaintenanceResponseDTO();
+        dto.setMaintenanceType(maintenance.getMaintenanceType());
+        dto.setNote(maintenance.getNote());
+        dto.setMaintenanceDate(maintenance.getMaintenanceDate());
+        dto.setNextDueDate(maintenance.getNextDueDate());
+
+        dto.setCarPlateNumber(maintenance.getCar().getPlateNumber());
+        dto.setCarBrand(maintenance.getCar().getBrand());
+        dto.setCarModel(maintenance.getCar().getModel());
+
+        dto.setCreatedByName(maintenance.getCreatedBy().getFullName());
+        dto.setCreatedByEmail(maintenance.getCreatedBy().getEmail());
+
+        return dto;
     }
 }

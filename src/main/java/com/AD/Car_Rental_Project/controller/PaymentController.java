@@ -7,6 +7,7 @@ import com.AD.Car_Rental_Project.service.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -23,8 +24,9 @@ public class PaymentController {
     // ================= Create Payment =================
     @PostMapping("/booking/{bookingId}")
     public ResponseEntity<Payment> createPayment(@PathVariable Long bookingId,
-                                                 @RequestParam PaymentType type) {
-        Payment payment = paymentService.createPayment(bookingId, type);
+                                                 @RequestParam PaymentType type,
+                                                 @RequestParam BigDecimal paidAmount) {
+        Payment payment = paymentService.createPayment(bookingId, type, paidAmount);
         return ResponseEntity.ok(payment);
     }
 

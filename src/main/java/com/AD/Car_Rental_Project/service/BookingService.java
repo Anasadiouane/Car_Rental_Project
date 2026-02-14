@@ -28,4 +28,6 @@ public interface BookingService {
     List<Booking> findByCustomerCIN(String cin);
 
     List<Booking> findByDateRange(LocalDate start, LocalDate end);
+
+    void updateCarRentalStatuses();
 }

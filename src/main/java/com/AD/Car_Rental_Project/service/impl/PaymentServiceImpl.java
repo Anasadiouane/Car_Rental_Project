@@ -10,6 +10,7 @@ import com.AD.Car_Rental_Project.service.PaymentService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -29,18 +30,51 @@ public class PaymentServiceImpl implements PaymentService {
 
     // ====== Core Operations ======
     @Override
-    public Payment createPayment(Long bookingId, PaymentType type) {
+    public Payment createPayment(Long bookingId, PaymentType type, BigDecimal amount) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
+        PaymentStatus status;
+        if (amount.compareTo(booking.getTotalPrice()) < 0) {
+            status = PaymentStatus.PARTIAL;
+        } else if (amount.compareTo(booking.getTotalPrice()) == 0) {
+            status = PaymentStatus.PAID;
+        } else {
+            throw new IllegalArgumentException("Amount exceeds total price");
+        }
+
         Payment payment = Payment.builder()
                 .booking(booking)
-                .amount(booking.getTotalPrice())
+                .amount(amount)
                 .paymentType(type)
-                .paymentStatus(PaymentStatus.PAID)
+                .paymentStatus(status)
                 .paymentDate(LocalDate.now())
                 .transactionId("TX-" + booking.getId() + "-" + System.currentTimeMillis())
                 .build();
+
+        return paymentRepository.save(payment);
+    }
+
+    @Override
+    public Payment updatePayment(Long paymentId, BigDecimal additionalAmount) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+
+        Booking booking = payment.getBooking();
+        BigDecimal totalPrice = booking.getTotalPrice();
+
+        // Nouveau montant payé
+        BigDecimal newAmount = payment.getAmount().add(additionalAmount);
+        payment.setAmount(newAmount);
+
+        // Vérification du statut
+        if (newAmount.compareTo(totalPrice) < 0) {
+            payment.setPaymentStatus(PaymentStatus.PARTIAL);
+        } else if (newAmount.compareTo(totalPrice) == 0) {
+            payment.setPaymentStatus(PaymentStatus.PAID);
+        } else {
+            throw new IllegalArgumentException("Amount exceeds total price");
+        }
 
         return paymentRepository.save(payment);
     }

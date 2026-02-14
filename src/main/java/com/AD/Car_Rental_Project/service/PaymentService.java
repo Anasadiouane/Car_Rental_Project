@@ -4,6 +4,7 @@ import com.AD.Car_Rental_Project.domain.entity.Payment;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +12,9 @@ import java.util.Optional;
 public interface PaymentService {
 
     // ====== Core Operations ======
-    Payment createPayment(Long bookingId, PaymentType type);
+    Payment createPayment(Long bookingId, PaymentType type, BigDecimal paidAmount);
+
+    Payment updatePayment(Long paymentId, BigDecimal additionalAmount);
 
     Optional<Payment> findById(Long id);
 

@@ -4,9 +4,11 @@ import com.AD.Car_Rental_Project.domain.entity.*;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
+import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.repository.*;
 import com.AD.Car_Rental_Project.service.BookingService;
 import jakarta.transaction.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -75,6 +77,16 @@ public class BookingServiceImpl implements BookingService {
         booking.setBookingStatus(BookingStatus.CONFIRMED);
         booking.setConfirmedBy(user);
 
+        Car car = booking.getCar();
+        LocalDate today = LocalDate.now();
+
+        if (!booking.getStartDate().isAfter(today)) {
+            car.setRentalStatus(RentalStatus.RENTED);
+        } else {
+            car.setRentalStatus(RentalStatus.AVAILABLE); // réservée mais pas encore louée
+        }
+        carRepository.save(car);
+
         Contract contract = Contract.builder()
                 .booking(booking)
                 .contractNumber("CTR-" + booking.getId() + "-" + System.currentTimeMillis())
@@ -130,4 +142,30 @@ public class BookingServiceImpl implements BookingService {
     public List<Booking> findByDateRange(LocalDate start, LocalDate end) {
         return bookingRepository.findByStartDateBetween(start, end);
     }
+
+    @Override
+    @Scheduled(cron = "0 0 0 * * ?") // chaque nuit à minuit
+    public void updateCarRentalStatuses() {
+        LocalDate today = LocalDate.now();
+        List<Booking> bookings = bookingRepository.findAll();
+
+        for (Booking booking : bookings) {
+            Car car = booking.getCar();
+
+            if (booking.getBookingStatus() == BookingStatus.CONFIRMED) {
+                // Si la réservation a commencé
+                if (!booking.getStartDate().isAfter(today) && !booking.getEndDate().isBefore(today)) {
+                    car.setRentalStatus(RentalStatus.RENTED);
+                }
+                // Si la réservation est terminée
+                else if (booking.getEndDate().isBefore(today)) {
+                    booking.setBookingStatus(BookingStatus.FINISHED); // tu peux ajouter ce statut
+                    car.setRentalStatus(RentalStatus.AVAILABLE);
+                }
+                carRepository.save(car);
+                bookingRepository.save(booking);
+            }
+        }
+    }
+
 }
