@@ -4,6 +4,7 @@ import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
 import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -49,9 +50,10 @@ public class Notification implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
+    @NotNull
     private NotificationType notificationType;
 
-    // Generic reference to related entity (Booking, Car, Maintenance, Payment...)
+    @NotNull
     private Long relatedEntityId;
 
     @Enumerated(EnumType.STRING)

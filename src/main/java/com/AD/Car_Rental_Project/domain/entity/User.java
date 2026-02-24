@@ -50,7 +50,7 @@ public class User implements Serializable {
 
     @NotBlank
     @Column(nullable = false)
-    private String password; // ⚠️ à encoder avec BCrypt avant stockage
+    private String password; // ⚠️ Encode with BCrypt before storage
 
     @Column(length = 20)
     private String phone;
@@ -75,13 +75,13 @@ public class User implements Serializable {
     private LocalDateTime updatedAt;
 
     // ================= Relationships =================
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
     @Builder.Default
     private List<Notification> notifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "confirmedBy", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
     @Builder.Default
-    private List<Booking> confirmedBookings = new ArrayList<>();
+    private List<Booking> bookings = new ArrayList<>();
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     @Builder.Default

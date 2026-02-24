@@ -62,7 +62,7 @@ public class Car implements Serializable {
     @NotNull
     @Positive
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal pricePerDay;
+    private BigDecimal pricePerDay;  //we cen use an abstract class here called CarPrice for adding currency(MAD, EURO, DOLLAR)
 
     // ================= Technical Info =================
     @PositiveOrZero

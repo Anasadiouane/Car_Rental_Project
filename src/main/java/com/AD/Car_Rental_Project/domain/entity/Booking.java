@@ -2,10 +2,9 @@ package com.AD.Car_Rental_Project.domain.entity;
 
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -14,14 +13,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Booking entity representing a car rental reservation.
- * Contains customer details, rental period, price, status, and links to related entities.
+ * Booking entity representing a reservation made by a customer.
+ * Links a car, a customer (User with role CUSTOMER), and contains booking details.
  */
 @Entity
 @Table(name = "bookings",
         indexes = {
-                @Index(name = "idx_booking_car", columnList = "car_id"),
-                @Index(name = "idx_booking_status", columnList = "bookingStatus")
+                @Index(name = "idx_booking_status", columnList = "bookingStatus"),
+                @Index(name = "idx_booking_dates", columnList = "startDate,endDate")
         })
 @Getter
 @Setter
@@ -38,20 +37,16 @@ public class Booking implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ================= Customer Info =================
-    @NotBlank
-    @Column(nullable = false, length = 100)
-    private String customerName;
+    // ================= Relationships =================
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private User customer; // role = CUSTOMER
 
-    @NotBlank
-    @Column(nullable = false, length = 50)
-    private String customerCIN;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "car_id", nullable = false)
+    private Car car;
 
-    @NotBlank
-    @Column(nullable = false, length = 20)
-    private String customerPhone;
-
-    // ================= Dates =================
+    // ================= Booking Info =================
     @NotNull
     @Column(nullable = false)
     private LocalDate startDate;
@@ -60,12 +55,10 @@ public class Booking implements Serializable {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    // ================= Price =================
-    @Column(nullable = false, precision = 8, scale = 2)
-    @DecimalMin(value = "0.0", inclusive = false)
+    @NotNull
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal totalPrice;
 
-    // ================= Status =================
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private BookingStatus bookingStatus;
@@ -75,41 +68,13 @@ public class Booking implements Serializable {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
-    // ================= Relationships =================
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "car_id", nullable = false)
-    private Car car;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "confirmed_by")
-    private User confirmedBy;
-
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Contract contract;
-
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Payment payment;
-
-    // ================= Business Validation =================
-    @PrePersist
-    @PreUpdate
-    private void validateDates() {
-        if (endDate != null && startDate != null && endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("End date cannot be before start date");
-        }
-    }
-
     // ================= Equals & HashCode =================
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Booking)) return false;
-        Booking that = (Booking) o;
-        return id != null && id.equals(that.id);
+        Booking booking = (Booking) o;
+        return id != null && id.equals(booking.id);
     }
 
     @Override
