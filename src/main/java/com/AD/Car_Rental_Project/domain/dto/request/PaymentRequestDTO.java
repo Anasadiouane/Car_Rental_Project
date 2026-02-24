@@ -2,12 +2,20 @@ package com.AD.Car_Rental_Project.domain.dto.request;
 
 import java.math.BigDecimal;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.*;
 
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PaymentRequestDTO {
-    private Long bookingId;          // référence vers la réservation
-    private PaymentType paymentType; // type de paiement (CARD, CASH, TRANSFER)
-    private BigDecimal amount;       // montant payé par le client (avance ou total)
+    @NotNull
+    private Long bookingId;
+
+    @NotNull
+    private PaymentType paymentType;
+
+    @NotNull @Positive
+    private BigDecimal amount;
 }

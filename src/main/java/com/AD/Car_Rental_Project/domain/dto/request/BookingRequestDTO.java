@@ -1,16 +1,23 @@
 package com.AD.Car_Rental_Project.domain.dto.request;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class BookingRequestDTO {
+    @NotNull
+    private Long customerId;
+
+    @NotNull
     private Long carId;
-    private String customerName;
-    private String customerCIN;
-    private String customerPhone;
+
+    @NotNull
     private LocalDate startDate;
+
+    @NotNull
     private LocalDate endDate;
 }

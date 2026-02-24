@@ -3,10 +3,11 @@ package com.AD.Car_Rental_Project.domain.dto.response;
 import java.time.LocalDateTime;
 import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
 import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class NotificationResponseDTO {
     private Long id;
     private String title;
@@ -17,7 +18,7 @@ public class NotificationResponseDTO {
     private boolean seen;
     private LocalDateTime createdAt;
 
-    // Infos utilisateur destinataire
+    // Infos utilisateur
     private String userFullName;
     private String userEmail;
 }

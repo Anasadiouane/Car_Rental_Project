@@ -10,7 +10,7 @@ public class UserResponseDTO {
     private String fullName;
     private String phone;
     private String email;
-    private String photo;
+    private String photoUrl;
     private Role role;
     private boolean active;
 }

@@ -2,21 +2,45 @@ package com.AD.Car_Rental_Project.domain.dto.request;
 
 import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.TechnicalStatus;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class CarRequestDTO {
-    private String plateNumber;
+    @NotBlank
     private String brand;
+
+    @NotBlank
     private String model;
+
+    @Min(1990)
+    private int year;
+
+    @NotBlank
+    private String plateNumber;
+
+    @NotNull @Positive
     private BigDecimal pricePerDay;
+
+    @PositiveOrZero
+    private int mileage;
+
+    private LocalDate lastOilChangeDate;
+
+    @PositiveOrZero
+    private int lastOilChangeMileage;
+
+    private LocalDate visitExpiryDate;
     private LocalDate insuranceExpiryDate;
-    private LocalDate technicalVisitExpiryDate;
+
+    @NotNull
     private RentalStatus rentalStatus;
+
+    @NotNull
     private TechnicalStatus technicalStatus;
-    private String photoUrl; // champ pour la photo
+
+    private String photoUrl;
 }
