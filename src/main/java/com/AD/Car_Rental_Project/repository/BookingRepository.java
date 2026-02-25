@@ -14,7 +14,5 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByBookingStatus(BookingStatus status);
     List<Booking> findByCar_Id(Long carId);
-    List<Booking> findByCustomerCIN(String customerCIN);
     List<Booking> findByStartDateBetween(LocalDate start, LocalDate end);
-    List<Booking> findByConfirmedBy_Id(Long userId);
 }
