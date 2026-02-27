@@ -7,7 +7,9 @@ import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 
 import com.AD.Car_Rental_Project.service.BookingService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,109 +18,50 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bookings")
+@RequiredArgsConstructor
 public class BookingController {
 
     private final BookingService bookingService;
 
-    public BookingController(BookingService bookingService) {
-        this.bookingService = bookingService;
-    }
-
-    // ================= Create Booking =================
     @PostMapping
-    public ResponseEntity<BookingResponseDTO> createBooking(@RequestBody BookingRequestDTO request) {
-        Booking booking = bookingService.createBooking(
-                request.getCarId(),
-                request.getCustomerName(),
-                request.getCustomerCIN(),
-                request.getCustomerPhone(),
-                request.getStartDate(),
-                request.getEndDate()
-        );
-        return ResponseEntity.ok(toDto(booking));
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<BookingResponseDTO> createBooking(@RequestBody BookingRequestDTO dto) {
+        return ResponseEntity.ok(bookingService.createBooking(dto));
     }
 
-    // ================= Confirm Booking =================
     @PutMapping("/{id}/confirm")
-    public ResponseEntity<BookingResponseDTO> confirmBooking(@PathVariable Long id,
-                                                             @RequestParam Long userId,
-                                                             @RequestParam PaymentType paymentType) {
-        Booking booking = bookingService.confirmBooking(id, userId, paymentType);
-        return ResponseEntity.ok(toDto(booking));
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<BookingResponseDTO> confirmBooking(@PathVariable Long id, @RequestParam Long employeeId) {
+        return ResponseEntity.ok(bookingService.confirmBooking(id, employeeId));
     }
 
-    // ================= Cancel Booking =================
+    @PutMapping("/{id}/reject")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<BookingResponseDTO> rejectBooking(@PathVariable Long id, @RequestParam String reason, @RequestParam Long employeeId) {
+        return ResponseEntity.ok(bookingService.rejectBooking(id, reason, employeeId));
+    }
+
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<BookingResponseDTO> cancelBooking(@PathVariable Long id) {
-        Booking booking = bookingService.cancelBooking(id);
-        return ResponseEntity.ok(toDto(booking));
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<BookingResponseDTO> cancelBooking(@PathVariable Long id, @RequestParam String reason, @RequestParam Long userId) {
+        return ResponseEntity.ok(bookingService.cancelBooking(id, reason, userId));
     }
 
-    // ================= Find Methods =================
-    @GetMapping("/{id}")
-    public ResponseEntity<BookingResponseDTO> getBookingById(@PathVariable Long id) {
-        return bookingService.findById(id)
-                .map(this::toDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PutMapping("/{id}/finish")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<BookingResponseDTO> finishBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.finishBooking(id));
+    }
+
+    @GetMapping("/customer/{customerId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<List<BookingResponseDTO>> getBookingsByCustomer(@PathVariable Long customerId) {
+        return ResponseEntity.ok(bookingService.getBookingsByCustomer(customerId));
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<List<BookingResponseDTO>> getBookingsByStatus(@PathVariable BookingStatus status) {
-        return ResponseEntity.ok(
-                bookingService.findByStatus(status).stream()
-                        .map(this::toDto)
-                        .collect(Collectors.toList())
-        );
-    }
-
-    @GetMapping("/car/{carId}")
-    public ResponseEntity<List<BookingResponseDTO>> getBookingsByCar(@PathVariable Long carId) {
-        return ResponseEntity.ok(
-                bookingService.findByCar(carId).stream()
-                        .map(this::toDto)
-                        .collect(Collectors.toList())
-        );
-    }
-
-    @GetMapping("/customer/{cin}")
-    public ResponseEntity<List<BookingResponseDTO>> getBookingsByCustomerCIN(@PathVariable String cin) {
-        return ResponseEntity.ok(
-                bookingService.findByCustomerCIN(cin).stream()
-                        .map(this::toDto)
-                        .collect(Collectors.toList())
-        );
-    }
-
-    @GetMapping("/dates")
-    public ResponseEntity<List<BookingResponseDTO>> getBookingsByDateRange(@RequestParam LocalDate start,
-                                                                           @RequestParam LocalDate end) {
-        return ResponseEntity.ok(
-                bookingService.findByDateRange(start, end).stream()
-                        .map(this::toDto)
-                        .collect(Collectors.toList())
-        );
-    }
-
-    // ================= Mapping utilitaire =================
-    private BookingResponseDTO toDto(Booking booking) {
-        BookingResponseDTO dto = new BookingResponseDTO();
-        dto.setCustomerName(booking.getCustomerName());
-        dto.setCustomerCIN(booking.getCustomerCIN());
-        dto.setCustomerPhone(booking.getCustomerPhone());
-        dto.setStartDate(booking.getStartDate());
-        dto.setEndDate(booking.getEndDate());
-        dto.setTotalPrice(booking.getTotalPrice());
-        dto.setStatus(booking.getBookingStatus());
-
-        dto.setCarPlateNumber(booking.getCar().getPlateNumber());
-        dto.setCarBrand(booking.getCar().getBrand());
-        dto.setCarModel(booking.getCar().getModel());
-
-        if (booking.getConfirmedBy() != null) {
-            dto.setConfirmedByName(booking.getConfirmedBy().getFullName());
-        }
-
-        return dto;
+        return ResponseEntity.ok(bookingService.getBookingsByStatus(status));
     }
 }

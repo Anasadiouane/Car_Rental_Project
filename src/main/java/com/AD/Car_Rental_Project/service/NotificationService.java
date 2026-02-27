@@ -1,10 +1,7 @@
 package com.AD.Car_Rental_Project.service;
 
-import com.AD.Car_Rental_Project.domain.entity.Notification;
-import com.AD.Car_Rental_Project.domain.entity.User;
-import com.AD.Car_Rental_Project.domain.entity.Maintenance;
-import com.AD.Car_Rental_Project.domain.entity.Booking;
-import com.AD.Car_Rental_Project.domain.entity.Car;
+import com.AD.Car_Rental_Project.domain.dto.response.NotificationResponseDTO;
+import com.AD.Car_Rental_Project.domain.entity.*;
 import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
 import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
 
@@ -13,43 +10,16 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NotificationService {
+    void sendBookingEndSoonNotification(User user, Booking booking);
+    void sendBookingRejectedNotification(User user, Booking booking, String reason);
+    void sendBookingCancelledNotification(User user, Booking booking, String reason);
 
-    // ====== Core Operations ======
-    void createNotification(String title,
-                            String message,
-                            NotificationType type,
-                            Long relatedEntityId,
-                            RelatedEntityType relatedEntityType,
-                            User user);
+    void sendVisitExpiredNotification(Car car, User user);
+    void sendInsuranceExpiredNotification(Car car, User user);
+    void sendOilChangeExpiredNotification(Car car, User user);
+    void sendMaintenanceAlertNotification(Car car, User user);
 
-    void markAsSeen(Long notificationId);
-
-    void deleteNotification(Long id);
-
-    Optional<Notification> findById(Long id);
-
-    List<Notification> findAll();
-
-    // ====== User-specific Methods ======
-    List<Notification> getNotificationsForUser(User user);
-
-    List<Notification> getUnreadNotifications(User user);
-
-    long countUnreadNotifications(User user);
-
-    // ====== Business-specific Methods ======
-    void notifyAdminsAndEmployeesAboutMaintenance(Maintenance maintenance);
-
-    void notifyAdminsAndEmployeesAboutCarStatus(Car car);
-
-    void notifyCustomerIfBookingEndingSoon(Booking booking);
-
-    // ====== External Integration ======
-    void sendWhatsAppNotification(String phoneNumber, String message);
-
-    List<Notification> findByType(NotificationType type);
-
-    List<Notification> findByCreatedAfter(LocalDateTime dateTime);
-
-
+    List<NotificationResponseDTO> getNotificationsByUser(Long userId);
+    List<NotificationResponseDTO> getUnreadNotifications(Long userId);
+    void markNotificationAsSeen(Long notificationId);
 }

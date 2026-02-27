@@ -1,12 +1,15 @@
 package com.AD.Car_Rental_Project.service.impl;
 
+import com.AD.Car_Rental_Project.domain.dto.response.NotificationResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.*;
 import com.AD.Car_Rental_Project.domain.enumeration.*;
+import com.AD.Car_Rental_Project.domain.mapper.NotificationMapper;
 import com.AD.Car_Rental_Project.repository.NotificationRepository;
 import com.AD.Car_Rental_Project.repository.UserRepository;
 import com.AD.Car_Rental_Project.repository.BookingRepository;
 import com.AD.Car_Rental_Project.repository.CarRepository;
 import com.AD.Car_Rental_Project.service.NotificationService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,167 +21,138 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
-    private final BookingRepository bookingRepository;
-    private final CarRepository carRepository;
+    private final NotificationMapper notificationMapper;
 
-    // ====== Core Operations ======
     @Override
-    public void createNotification(String title,
-                                   String message,
-                                   NotificationType type,
-                                   Long relatedEntityId,
-                                   RelatedEntityType relatedEntityType,
-                                   User user) {
+    public void sendBookingEndSoonNotification(User user, Booking booking) {
         Notification notification = Notification.builder()
-                .title(title)
-                .message(message)
-                .notificationType(type)
-                .relatedEntityId(relatedEntityId)
-                .relatedEntityType(relatedEntityType)
+                .title("Booking Ending Soon")
+                .message("Your booking for car " + booking.getCar().getPlateNumber() + " ends on " + booking.getEndDate())
+                .notificationType(NotificationType.BOOKING_END_SOON)
+                .relatedEntityId(booking.getId())
+                .relatedEntityType(RelatedEntityType.BOOKING)
                 .user(user)
                 .seen(false)
                 .createdAt(LocalDateTime.now())
                 .build();
-
         notificationRepository.save(notification);
     }
 
     @Override
-    public void markAsSeen(Long notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(notification -> {
-            notification.setSeen(true);
-            notificationRepository.save(notification);
-        });
+    public void sendBookingRejectedNotification(User user, Booking booking, String reason) {
+        Notification notification = Notification.builder()
+                .title("Booking Rejected")
+                .message("Your booking for car " + booking.getCar().getPlateNumber() + " has been rejected. Reason: " + reason)
+                .notificationType(NotificationType.BOOKING_END_SOON) // ou un type spécifique si tu ajoutes REJECTED
+                .relatedEntityId(booking.getId())
+                .relatedEntityType(RelatedEntityType.BOOKING)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
     }
 
     @Override
-    public void deleteNotification(Long id) {
-        notificationRepository.deleteById(id);
+    public void sendBookingCancelledNotification(User user, Booking booking, String reason) {
+        Notification notification = Notification.builder()
+                .title("Booking Cancelled")
+                .message("Your booking for car " + booking.getCar().getPlateNumber() + " has been cancelled. Reason: " + reason)
+                .notificationType(NotificationType.BOOKING_END_SOON) // idem, ou un type spécifique si tu ajoutes CANCELLED
+                .relatedEntityId(booking.getId())
+                .relatedEntityType(RelatedEntityType.BOOKING)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
     }
 
     @Override
-    public Optional<Notification> findById(Long id) {
-        return notificationRepository.findById(id);
+    public void sendVisitExpiredNotification(Car car, User user) {
+        Notification notification = Notification.builder()
+                .title("Technical Visit Expired")
+                .message("The technical visit for car " + car.getPlateNumber() + " has expired.")
+                .notificationType(NotificationType.VISIT_EXPIRED)
+                .relatedEntityId(car.getId())
+                .relatedEntityType(RelatedEntityType.CAR)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
     }
 
     @Override
-    public List<Notification> findAll() {
-        return notificationRepository.findAll();
-    }
-
-    // ====== User-specific Methods ======
-    @Override
-    public List<Notification> getNotificationsForUser(User user) {
-        return notificationRepository.findByUserOrderByCreatedAt(user);
-    }
-
-    @Override
-    public List<Notification> getUnreadNotifications(User user) {
-        return notificationRepository.findByUserAndSeenFalse(user, false);
-    }
-
-    @Override
-    public long countUnreadNotifications(User user) {
-        return notificationRepository.countByUserAndSeenFalse(user);
-    }
-    @Override
-    public List<Notification> findByType(NotificationType type) {
-        return notificationRepository.findByNotificationType(type);
+    public void sendInsuranceExpiredNotification(Car car, User user) {
+        Notification notification = Notification.builder()
+                .title("Insurance Expired")
+                .message("The insurance for car " + car.getPlateNumber() + " has expired.")
+                .notificationType(NotificationType.INSURANCE_EXPIRED)
+                .relatedEntityId(car.getId())
+                .relatedEntityType(RelatedEntityType.CAR)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
     }
 
     @Override
-    public List<Notification> findByCreatedAfter(LocalDateTime dateTime) {
-        return notificationRepository.findByCreatedAtAfter(dateTime);
-    }
-
-
-    // ====== Business-specific Methods ======
-    @Override
-    public void notifyAdminsAndEmployeesAboutMaintenance(Maintenance maintenance) {
-        List<User> staff = userRepository.findByRoleIn(List.of(Role.ADMIN, Role.EMPLOYEE));
-        for (User user : staff) {
-            createNotification(
-                    "Maintenance Alert",
-                    "Maintenance scheduled for car " + maintenance.getCar().getPlateNumber(),
-                    NotificationType.MAINTENANCE_ALERT,
-                    maintenance.getId(),
-                    RelatedEntityType.CAR,
-                    user
-            );
-        }
+    public void sendOilChangeExpiredNotification(Car car, User user) {
+        Notification notification = Notification.builder()
+                .title("Oil Change Required")
+                .message("The car " + car.getPlateNumber() + " requires an oil change.")
+                .notificationType(NotificationType.OIL_CHANGE_EXPIRED)
+                .relatedEntityId(car.getId())
+                .relatedEntityType(RelatedEntityType.CAR)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
     }
 
     @Override
-    public void notifyAdminsAndEmployeesAboutCarStatus(Car car) {
-        List<User> staff = userRepository.findByRoleIn(List.of(Role.ADMIN, Role.EMPLOYEE));
-
-        NotificationType type = null;
-        String message = null;
-
-        switch (car.getTechnicalStatus()) {
-            case OIL_CHANGE_REQUIRED -> {
-                type = NotificationType.OIL_CHANGE_EXPIRED;
-                message = "Vidange requise pour la voiture " + car.getPlateNumber();
-            }
-            case VISIT_REQUIRED -> {
-                type = NotificationType.VISIT_EXPIRED;
-                message = "Visite technique expirée pour la voiture " + car.getPlateNumber();
-            }
-            case INSURANCE_EXPIRED -> {
-                type = NotificationType.INSURANCE_EXPIRED;
-                message = "Assurance expirée pour la voiture " + car.getPlateNumber();
-            }
-            case MAINTENANCE_EXPIRED -> {
-                type = NotificationType.MAINTENANCE_ALERT;
-                message = "Maintenance expirée pour la voiture " + car.getPlateNumber();
-            }
-        }
-
-        if (type != null) {
-            for (User user : staff) {
-                createNotification("Car Status Alert", message, type, car.getId(), RelatedEntityType.CAR, user);
-            }
-        }
+    public void sendMaintenanceAlertNotification(Car car, User user) {
+        Notification notification = Notification.builder()
+                .title("Maintenance Alert")
+                .message("Car " + car.getPlateNumber() + " requires maintenance.")
+                .notificationType(NotificationType.MAINTENANCE_ALERT)
+                .relatedEntityId(car.getId())
+                .relatedEntityType(RelatedEntityType.CAR)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+        notificationRepository.save(notification);
     }
 
     @Override
-    public void notifyCustomerIfBookingEndingSoon(Booking booking) {
-        LocalDate today = LocalDate.now();
-        if (booking.getEndDate().minusDays(2).isEqual(today)) {
-            sendWhatsAppNotification(
-                    booking.getCustomerPhone(),
-                    "Cher client " + booking.getCustomerName() +
-                            ", votre location de la voiture " + booking.getCar().getPlateNumber() +
-                            " se termine bientôt le " + booking.getEndDate() +
-                            ". Merci de préparer le retour."
-            );
-        }
+    public List<NotificationResponseDTO> getNotificationsByUser(Long userId) {
+        return notificationRepository.findByUserId(userId)
+                .stream()
+                .map(notificationMapper::toResponseDto)
+                .toList();
     }
 
-    // ====== Scheduler quotidien ======
-    @Scheduled(cron = "0 0 8 * * ?") // Tous les jours à 08h00
-    public void checkSystemNotifications() {
-        // Vérifier les voitures
-        List<Car> cars = carRepository.findAll();
-        for (Car car : cars) {
-            notifyAdminsAndEmployeesAboutCarStatus(car);
-        }
-
-        // Vérifier les réservations
-        List<Booking> bookings = bookingRepository.findAll();
-        for (Booking booking : bookings) {
-            notifyCustomerIfBookingEndingSoon(booking);
-        }
-    }
-
-    // ====== External Integration ======
     @Override
-    public void sendWhatsAppNotification(String phoneNumber, String message) {
-        // ⚠️ Ici tu intègres Twilio ou WhatsApp Business API
-        System.out.println("WhatsApp message sent to " + phoneNumber + " : " + message);
+    public List<NotificationResponseDTO> getUnreadNotifications(Long userId) {
+        return notificationRepository.findByUserIdAndSeenFalse(userId)
+                .stream()
+                .map(notificationMapper::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    public void markNotificationAsSeen(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
+        notification.setSeen(true);
+        notificationRepository.save(notification);
     }
 }

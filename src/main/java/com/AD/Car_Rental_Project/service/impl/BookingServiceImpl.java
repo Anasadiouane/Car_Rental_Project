@@ -1,13 +1,18 @@
 package com.AD.Car_Rental_Project.service.impl;
 
+import com.AD.Car_Rental_Project.domain.dto.request.BookingRequestDTO;
+import com.AD.Car_Rental_Project.domain.dto.response.BookingResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.*;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
+import com.AD.Car_Rental_Project.domain.mapper.BookingMapper;
 import com.AD.Car_Rental_Project.repository.*;
 import com.AD.Car_Rental_Project.service.BookingService;
+import com.AD.Car_Rental_Project.service.NotificationService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,154 +23,110 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final CarRepository carRepository;
-    private final ContractRepository contractRepository;
-    private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
-
-    public BookingServiceImpl(BookingRepository bookingRepository,
-                              CarRepository carRepository,
-                              ContractRepository contractRepository,
-                              PaymentRepository paymentRepository,
-                              UserRepository userRepository) {
-        this.bookingRepository = bookingRepository;
-        this.carRepository = carRepository;
-        this.contractRepository = contractRepository;
-        this.paymentRepository = paymentRepository;
-        this.userRepository = userRepository;
-    }
+    private final CarRepository carRepository;
+    private final BookingMapper bookingMapper;
+    private final NotificationService notificationService;
 
     @Override
-    public Booking createBooking(Long carId, String customerName, String customerCIN,
-                                 String customerPhone, LocalDate startDate, LocalDate endDate) {
-        if (endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("End date cannot be before start date");
-        }
-
-        Car car = carRepository.findById(carId)
+    public BookingResponseDTO createBooking(BookingRequestDTO dto) {
+        User customer = userRepository.findById(dto.getCustomerId())
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        Car car = carRepository.findById(dto.getCarId())
                 .orElseThrow(() -> new IllegalArgumentException("Car not found"));
 
-        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
-        BigDecimal totalPrice = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
+        Booking booking = bookingMapper.toEntity(dto);
+        booking.setCustomer(customer);
+        booking.setCar(car);
+        booking.setBookingStatus(BookingStatus.PENDING);
+        booking.setTotalPrice(BigDecimal.ZERO);
 
-        Booking booking = Booking.builder()
-                .car(car)
-                .customerName(customerName)
-                .customerCIN(customerCIN)
-                .customerPhone(customerPhone)
-                .startDate(startDate)
-                .endDate(endDate)
-                .totalPrice(totalPrice)
-                .bookingStatus(BookingStatus.PENDING)
-                .build();
+        bookingRepository.save(booking);
 
-        return bookingRepository.save(booking);
+        notificationService.sendBookingEndSoonNotification(customer, booking);
+
+        return bookingMapper.toResponseDto(booking);
     }
 
     @Override
-    public Booking confirmBooking(Long bookingId, Long userId, PaymentType paymentType) {
+    public BookingResponseDTO confirmBooking(Long bookingId, Long employeeId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
         booking.setBookingStatus(BookingStatus.CONFIRMED);
-        booking.setConfirmedBy(user);
+        BigDecimal totalPrice = booking.getCar().getPricePerDay()
+                .multiply(BigDecimal.valueOf(
+                        ChronoUnit.DAYS.between(booking.getStartDate(), booking.getEndDate())));
+        booking.setTotalPrice(totalPrice);
 
-        Car car = booking.getCar();
-        LocalDate today = LocalDate.now();
+        booking.getCar().setRentalStatus(RentalStatus.RENTED);
 
-        if (!booking.getStartDate().isAfter(today)) {
-            car.setRentalStatus(RentalStatus.RENTED);
-        } else {
-            car.setRentalStatus(RentalStatus.AVAILABLE); // réservée mais pas encore louée
-        }
-        carRepository.save(car);
+        bookingRepository.save(booking);
 
-        Contract contract = Contract.builder()
-                .booking(booking)
-                .contractNumber("CTR-" + booking.getId() + "-" + System.currentTimeMillis())
-                .pdfPath("contracts/CTR-" + booking.getId() + ".pdf")
-                .build();
-        contractRepository.save(contract);
-        booking.setContract(contract);
+        notificationService.sendBookingEndSoonNotification(booking.getCustomer(), booking);
 
-        Payment payment = Payment.builder()
-                .booking(booking)
-                .amount(booking.getTotalPrice())
-                .paymentType(paymentType)
-                .paymentStatus(PaymentStatus.PAID)
-                .paymentDate(LocalDate.now())
-                .transactionId("TX-" + booking.getId() + "-" + System.currentTimeMillis())
-                .build();
-        paymentRepository.save(payment);
-        booking.setPayment(payment);
-
-        return bookingRepository.save(booking);
+        return bookingMapper.toResponseDto(booking);
     }
 
     @Override
-    public Booking cancelBooking(Long bookingId) {
+    public BookingResponseDTO rejectBooking(Long bookingId, String reason, Long employeeId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        booking.setBookingStatus(BookingStatus.REJECTED);
+        bookingRepository.save(booking);
+
+        notificationService.sendBookingRejectedNotification(booking.getCustomer(), booking, reason);
+
+        return bookingMapper.toResponseDto(booking);
+    }
+
+    @Override
+    public BookingResponseDTO cancelBooking(Long bookingId, String reason, Long userId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
         booking.setBookingStatus(BookingStatus.CANCELLED);
-        return bookingRepository.save(booking);
+        booking.getCar().setRentalStatus(RentalStatus.AVAILABLE);
+
+        bookingRepository.save(booking);
+
+        notificationService.sendBookingCancelledNotification(booking.getCustomer(), booking, reason);
+
+        return bookingMapper.toResponseDto(booking);
     }
 
     @Override
-    public Optional<Booking> findById(Long id) {
-        return bookingRepository.findById(id);
+    public BookingResponseDTO finishBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        booking.setBookingStatus(BookingStatus.FINISHED);
+        booking.getCar().setRentalStatus(RentalStatus.AVAILABLE);
+
+        bookingRepository.save(booking);
+
+        return bookingMapper.toResponseDto(booking);
     }
 
     @Override
-    public List<Booking> findByStatus(BookingStatus status) {
-        return bookingRepository.findByBookingStatus(status);
+    public List<BookingResponseDTO> getBookingsByCustomer(Long customerId) {
+        return bookingRepository.findByCustomerId(customerId)
+                .stream()
+                .map(bookingMapper::toResponseDto)
+                .toList();
     }
 
     @Override
-    public List<Booking> findByCar(Long carId) {
-        return bookingRepository.findByCar_Id(carId);
+    public List<BookingResponseDTO> getBookingsByStatus(BookingStatus status) {
+        return bookingRepository.findByBookingStatus(status)
+                .stream()
+                .map(bookingMapper::toResponseDto)
+                .toList();
     }
-
-    @Override
-    public List<Booking> findByCustomerCIN(String cin) {
-        return bookingRepository.findByCustomerCIN(cin);
-    }
-
-    @Override
-    public List<Booking> findByDateRange(LocalDate start, LocalDate end) {
-        return bookingRepository.findByStartDateBetween(start, end);
-    }
-
-    @Override
-    @Scheduled(cron = "0 0 0 * * ?") // chaque nuit à minuit
-    public void updateCarRentalStatuses() {
-        LocalDate today = LocalDate.now();
-        List<Booking> bookings = bookingRepository.findAll();
-
-        for (Booking booking : bookings) {
-            Car car = booking.getCar();
-
-            if (booking.getBookingStatus() == BookingStatus.CONFIRMED) {
-                // Si la réservation a commencé
-                if (!booking.getStartDate().isAfter(today) && !booking.getEndDate().isBefore(today)) {
-                    car.setRentalStatus(RentalStatus.RENTED);
-                }
-                // Si la réservation est terminée
-                else if (booking.getEndDate().isBefore(today)) {
-                    booking.setBookingStatus(BookingStatus.FINISHED); // tu peux ajouter ce statut
-                    car.setRentalStatus(RentalStatus.AVAILABLE);
-                }
-                carRepository.save(car);
-                bookingRepository.save(booking);
-            }
-        }
-    }
-
 }

@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 public interface ContractMapper {
     @Mapping(source = "booking.customer.fullName", target = "customerName")
     @Mapping(source = "booking.customer.cin", target = "customerCIN")
+    @Mapping(source = "booking.customer.email", target = "customerEmail")
     @Mapping(source = "booking.customer.phone", target = "customerPhone")
     @Mapping(source = "booking.car.brand", target = "carBrand")
     @Mapping(source = "booking.car.model", target = "carModel")

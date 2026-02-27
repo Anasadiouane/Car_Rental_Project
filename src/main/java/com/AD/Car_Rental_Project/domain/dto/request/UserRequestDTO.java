@@ -12,6 +12,9 @@ public class UserRequestDTO {
     @NotBlank
     private String fullName;
 
+    @NotBlank
+    private String cin;
+
     private String phone;
 
     @Email @NotBlank

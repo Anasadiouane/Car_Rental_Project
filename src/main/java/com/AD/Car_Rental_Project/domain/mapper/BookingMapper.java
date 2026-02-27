@@ -9,8 +9,10 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface BookingMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "customer", ignore = true) // sera injecté via service
-    @Mapping(target = "car", ignore = true)      // sera injecté via service
+    @Mapping(target = "customer", ignore = true) // injecté via service
+    @Mapping(target = "car", ignore = true)      // injecté via service
+    @Mapping(target = "totalPrice", ignore = true) // calculé dans service
+    @Mapping(target = "bookingStatus", ignore = true) // défini dans service
     Booking toEntity(BookingRequestDTO dto);
 
     @Mapping(source = "customer.id", target = "customerId")

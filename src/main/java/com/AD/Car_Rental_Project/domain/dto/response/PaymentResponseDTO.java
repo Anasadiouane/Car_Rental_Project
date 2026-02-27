@@ -21,6 +21,7 @@ public class PaymentResponseDTO {
     // Infos booking
     private String customerName;
     private String customerCIN;
+    private String customerEmail;
     private String customerPhone;
     private String carBrand;
     private String carModel;

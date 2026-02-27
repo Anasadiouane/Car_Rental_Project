@@ -1,80 +1,109 @@
 package com.AD.Car_Rental_Project.service.impl;
 
+import com.AD.Car_Rental_Project.domain.dto.request.UserRequestDTO;
+import com.AD.Car_Rental_Project.domain.dto.response.UserResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.Role;
+import com.AD.Car_Rental_Project.domain.mapper.UserMapper;
 import com.AD.Car_Rental_Project.repository.UserRepository;
 import com.AD.Car_Rental_Project.service.UserService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    // ====== Core Operations ======
-    @Override
-    public User createUser(User user) {
-        return userRepository.save(user);
-    }
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public User updateUser(Long id, User user) {
-        User existing = userRepository.findById(id)
+    public UserResponseDTO registerCustomer(UserRequestDTO dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        if (userRepository.existsByCin(dto.getCin())) {
+            throw new IllegalArgumentException("CIN already exists");
+        }
+
+        User user = userMapper.toEntity(dto);
+        user.setRole(Role.CUSTOMER);
+        user.setActive(true);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        userRepository.save(user);
+        return userMapper.toResponseDto(user);
+    }
+
+    @Override
+    public UserResponseDTO createEmployeeOrAdmin(UserRequestDTO dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        if (userRepository.existsByCin(dto.getCin())) {
+            throw new IllegalArgumentException("CIN already exists");
+        }
+
+        User user = userMapper.toEntity(dto);
+        user.setActive(true);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        userRepository.save(user);
+        return userMapper.toResponseDto(user);
+    }
+
+    @Override
+    public UserResponseDTO updateUser(Long userId, UserRequestDTO dto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        existing.setFullName(user.getFullName());
-        existing.setPhone(user.getPhone());
-        existing.setEmail(user.getEmail());
-        existing.setPassword(user.getPassword());
-        existing.setRole(user.getRole());
-        existing.setActive(user.isActive());
-        existing.setPhotoUrl(user.getPhotoUrl());
+        user.setFullName(dto.getFullName());
+        user.setPhone(dto.getPhone());
+        user.setEmail(dto.getEmail());
+        user.setPhotoUrl(dto.getPhotoUrl());
+        user.setRole(dto.getRole());
 
-        return userRepository.save(existing);
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        userRepository.save(user);
+        return userMapper.toResponseDto(user);
     }
 
     @Override
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public void deactivateUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setActive(false);
+        userRepository.save(user);
     }
 
     @Override
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+    public void activateUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setActive(true);
+        userRepository.save(user);
     }
 
-    @Override
-    public List<User> findAll() {
-        return userRepository.findAll();
-    }
-
-    // ====== Search Methods ======
     @Override
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
     @Override
-    public Optional<User> findByPhone(String phone) {
-        return userRepository.findByPhone(phone);
-    }
-
-    @Override
-    public List<User> findByRole(Role role) {
-        return userRepository.findByRole(role);
-    }
-
-    @Override
-    public List<User> findByRoleIn(List<Role> roles) {
-        return userRepository.findByRoleIn(roles);
+    public List<UserResponseDTO> getUsersByRole(Role role) {
+        return userRepository.findByRole(role)
+                .stream()
+                .map(userMapper::toResponseDto)
+                .toList();
     }
 }

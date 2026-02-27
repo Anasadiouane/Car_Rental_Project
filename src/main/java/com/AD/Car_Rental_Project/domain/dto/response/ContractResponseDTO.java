@@ -16,6 +16,7 @@ public class ContractResponseDTO {
     // Infos client
     private String customerName;
     private String customerCIN;
+    private String customerEmail;
     private String customerPhone;
 
     // Infos voiture

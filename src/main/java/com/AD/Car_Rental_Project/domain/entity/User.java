@@ -43,6 +43,10 @@ public class User implements Serializable {
     @Column(nullable = false, length = 100)
     private String fullName;
 
+    @NotBlank
+    @Column(nullable = false, unique = true, length = 20)
+    private String cin;
+
     @Email
     @NotBlank
     @Column(nullable = false, unique = true, length = 150)
@@ -75,7 +79,7 @@ public class User implements Serializable {
     private LocalDateTime updatedAt;
 
     // ================= Relationships =================
-    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @Builder.Default
     private List<Notification> notifications = new ArrayList<>();
 
