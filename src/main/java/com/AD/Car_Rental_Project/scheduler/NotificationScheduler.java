@@ -2,6 +2,7 @@ package com.AD.Car_Rental_Project.scheduler;
 
 import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Car;
+import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.TechnicalStatus;
 import com.AD.Car_Rental_Project.repository.BookingRepository;
@@ -42,17 +43,25 @@ public class NotificationScheduler {
         List<Car> cars = carRepository.findAll();
 
         for (Car car : cars) {
-            if (car.getVisitExpiryDate().isBefore(today)) {
-                notificationService.sendVisitExpiredNotification(car, car.getOwner());
+            // On récupère le dernier booking actif (si existant)
+            Booking activeBooking = car.getBookings().stream()
+                    .filter(b -> b.getBookingStatus() == BookingStatus.CONFIRMED) // ou ton statut actif
+                    .findFirst()
+                    .orElse(null);
+
+            User targetUser = (activeBooking != null) ? activeBooking.getCustomer() : null;
+
+            if (car.getVisitExpiryDate() != null && car.getVisitExpiryDate().isBefore(today)) {
+                notificationService.sendVisitExpiredNotification(car, targetUser);
             }
-            if (car.getInsuranceExpiryDate().isBefore(today)) {
-                notificationService.sendInsuranceExpiredNotification(car, car.getOwner());
+            if (car.getInsuranceExpiryDate() != null && car.getInsuranceExpiryDate().isBefore(today)) {
+                notificationService.sendInsuranceExpiredNotification(car, targetUser);
             }
-            if (car.getLastOilChangeDate().plusMonths(6).isBefore(today)) {
-                notificationService.sendOilChangeExpiredNotification(car, car.getOwner());
+            if (car.getLastOilChangeDate() != null && car.getLastOilChangeDate().plusMonths(6).isBefore(today)) {
+                notificationService.sendOilChangeExpiredNotification(car, targetUser);
             }
             if (car.getTechnicalStatus() == TechnicalStatus.MAINTENANCE_EXPIRED) {
-                notificationService.sendMaintenanceAlertNotification(car, car.getOwner());
+                notificationService.sendMaintenanceAlertNotification(car, targetUser);
             }
         }
     }

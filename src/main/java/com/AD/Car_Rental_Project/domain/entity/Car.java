@@ -26,8 +26,7 @@ import java.util.List;
                 @Index(name = "idx_car_plate", columnList = "plateNumber", unique = true),
                 @Index(name = "idx_car_rental_status", columnList = "rentalStatus")
         })
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
