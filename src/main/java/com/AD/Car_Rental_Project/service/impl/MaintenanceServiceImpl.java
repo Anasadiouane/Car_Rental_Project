@@ -18,9 +18,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,8 +39,10 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
 
         Maintenance maintenance = maintenanceMapper.toEntity(dto);
-        maintenance.setCar(car);
         maintenance.setCreatedBy(employee);
+
+        // ✅ Utilisation de la méthode helper pour synchroniser les deux côtés
+        car.addMaintenance(maintenance);
 
         // Mettre la voiture en statut MAINTENANCE
         car.setRentalStatus(RentalStatus.MAINTENANCE);
@@ -68,7 +68,6 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
         return maintenanceMapper.toResponseDto(maintenance);
     }
-
     @Override
     public List<MaintenanceResponseDTO> getMaintenancesByCar(Long carId) {
         return maintenanceRepository.findByCarId(carId)

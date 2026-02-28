@@ -1,20 +1,14 @@
 package com.AD.Car_Rental_Project.controller;
 
 import com.AD.Car_Rental_Project.domain.dto.response.NotificationResponseDTO;
-import com.AD.Car_Rental_Project.domain.entity.Notification;
-import com.AD.Car_Rental_Project.domain.entity.User;
-import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
 
 import com.AD.Car_Rental_Project.service.NotificationService;
-import com.AD.Car_Rental_Project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/notifications")

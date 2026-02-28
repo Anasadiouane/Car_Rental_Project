@@ -2,17 +2,14 @@ package com.AD.Car_Rental_Project.controller;
 
 import com.AD.Car_Rental_Project.domain.dto.request.PaymentRequestDTO;
 import com.AD.Car_Rental_Project.domain.dto.response.PaymentResponseDTO;
-import com.AD.Car_Rental_Project.domain.entity.Payment;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
-import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 import com.AD.Car_Rental_Project.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+
 import java.util.List;
 
 @RestController

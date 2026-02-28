@@ -2,7 +2,6 @@ package com.AD.Car_Rental_Project.controller;
 
 import com.AD.Car_Rental_Project.domain.dto.request.CarRequestDTO;
 import com.AD.Car_Rental_Project.domain.dto.response.CarResponseDTO;
-import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.TechnicalStatus;
 
@@ -12,9 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cars")

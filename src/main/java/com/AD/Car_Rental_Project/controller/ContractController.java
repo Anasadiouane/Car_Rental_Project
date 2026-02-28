@@ -1,19 +1,14 @@
 package com.AD.Car_Rental_Project.controller;
 
-import com.AD.Car_Rental_Project.domain.dto.request.ContractRequestDTO;
 import com.AD.Car_Rental_Project.domain.dto.response.ContractResponseDTO;
-import com.AD.Car_Rental_Project.domain.entity.Contract;
 
 import com.AD.Car_Rental_Project.service.ContractService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/contracts")

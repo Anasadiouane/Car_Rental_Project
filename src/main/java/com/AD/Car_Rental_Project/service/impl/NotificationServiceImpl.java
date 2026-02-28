@@ -5,19 +5,13 @@ import com.AD.Car_Rental_Project.domain.entity.*;
 import com.AD.Car_Rental_Project.domain.enumeration.*;
 import com.AD.Car_Rental_Project.domain.mapper.NotificationMapper;
 import com.AD.Car_Rental_Project.repository.NotificationRepository;
-import com.AD.Car_Rental_Project.repository.UserRepository;
-import com.AD.Car_Rental_Project.repository.BookingRepository;
-import com.AD.Car_Rental_Project.repository.CarRepository;
 import com.AD.Car_Rental_Project.service.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +20,25 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
+
+    @Override
+    public void sendBookingConfirmedNotification(User user, Booking booking) {
+        Notification notification = Notification.builder()
+                .title("Booking Confirmed")
+                .message("Your booking for car " + booking.getCar().getPlateNumber() +
+                        " has been confirmed from " + booking.getStartDate() +
+                        " to " + booking.getEndDate() +
+                        ". Total price: " + booking.getTotalPrice() + " MAD")
+                .notificationType(NotificationType.BOOKING_CONFIRMED)
+                .relatedEntityId(booking.getId())
+                .relatedEntityType(RelatedEntityType.BOOKING)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        notificationRepository.save(notification);
+    }
 
     @Override
     public void sendBookingEndSoonNotification(User user, Booking booking) {

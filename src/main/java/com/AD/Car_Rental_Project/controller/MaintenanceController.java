@@ -2,7 +2,6 @@ package com.AD.Car_Rental_Project.controller;
 
 import com.AD.Car_Rental_Project.domain.dto.request.MaintenanceRequestDTO;
 import com.AD.Car_Rental_Project.domain.dto.response.MaintenanceResponseDTO;
-import com.AD.Car_Rental_Project.domain.entity.Maintenance;
 import com.AD.Car_Rental_Project.domain.enumeration.MaintenanceType;
 
 import com.AD.Car_Rental_Project.service.MaintenanceService;
@@ -11,9 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/maintenances")

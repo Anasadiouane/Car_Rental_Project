@@ -59,6 +59,7 @@ public class Notification implements Serializable {
     @Enumerated(EnumType.STRING)
     private RelatedEntityType relatedEntityType;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean seen = false;
 

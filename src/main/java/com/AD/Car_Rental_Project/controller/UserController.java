@@ -2,7 +2,6 @@ package com.AD.Car_Rental_Project.controller;
 
 import com.AD.Car_Rental_Project.domain.dto.request.UserRequestDTO;
 import com.AD.Car_Rental_Project.domain.dto.response.UserResponseDTO;
-import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.Role;
 import com.AD.Car_Rental_Project.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")

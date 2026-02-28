@@ -72,8 +72,7 @@ public class Booking implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Booking)) return false;
-        Booking booking = (Booking) o;
+        if (!(o instanceof Booking booking)) return false;
         return id != null && id.equals(booking.id);
     }
 

@@ -60,6 +60,7 @@ public class User implements Serializable {
     private String phone;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean active = true;
 
     @Column(length = 500)

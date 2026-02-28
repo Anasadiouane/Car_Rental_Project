@@ -18,4 +18,8 @@ public interface BookingService {
     BookingResponseDTO finishBooking(Long bookingId);
     List<BookingResponseDTO> getBookingsByCustomer(Long customerId);
     List<BookingResponseDTO> getBookingsByStatus(BookingStatus status);
+
+    List<BookingResponseDTO> getAllBookings();
+
+    BookingResponseDTO returnCar(Long bookingId);
 }

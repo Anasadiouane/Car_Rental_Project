@@ -5,7 +5,6 @@ import com.AD.Car_Rental_Project.domain.dto.response.PaymentResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Payment;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
-import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 import com.AD.Car_Rental_Project.domain.mapper.PaymentMapper;
 import com.AD.Car_Rental_Project.repository.BookingRepository;
 import com.AD.Car_Rental_Project.repository.PaymentRepository;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service

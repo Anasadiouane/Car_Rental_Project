@@ -22,4 +22,6 @@ public interface NotificationService {
     List<NotificationResponseDTO> getNotificationsByUser(Long userId);
     List<NotificationResponseDTO> getUnreadNotifications(Long userId);
     void markNotificationAsSeen(Long notificationId);
+
+    void sendBookingConfirmedNotification(User customer, Booking booking);
 }
