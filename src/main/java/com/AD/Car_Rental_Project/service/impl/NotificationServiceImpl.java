@@ -41,6 +41,25 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void sendBookingCreatedNotification(User user, Booking booking) {
+        Notification notification = Notification.builder()
+                .title("Booking Created")
+                .message("Your booking request for car " + booking.getCar().getPlateNumber() +
+                        " from " + booking.getStartDate() +
+                        " to " + booking.getEndDate() +
+                        " has been created and is pending confirmation.")
+                .notificationType(NotificationType.BOOKING_CREATED)
+                .relatedEntityId(booking.getId())
+                .relatedEntityType(RelatedEntityType.BOOKING)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        notificationRepository.save(notification);
+    }
+
+    @Override
     public void sendBookingEndSoonNotification(User user, Booking booking) {
         Notification notification = Notification.builder()
                 .title("Booking Ending Soon")

@@ -24,4 +24,6 @@ public interface NotificationService {
     void markNotificationAsSeen(Long notificationId);
 
     void sendBookingConfirmedNotification(User customer, Booking booking);
+
+    void sendBookingCreatedNotification(User customer, Booking booking);
 }

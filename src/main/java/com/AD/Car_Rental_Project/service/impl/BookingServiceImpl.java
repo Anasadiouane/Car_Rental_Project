@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class BookingServiceImpl implements BookingService {
     private final CarRepository carRepository;
     private final BookingMapper bookingMapper;
     private final NotificationService notificationService;
+    private final ContractRepository contractRepository;
 
     @Override
     public BookingResponseDTO createBooking(BookingRequestDTO dto) {
@@ -35,18 +37,34 @@ public class BookingServiceImpl implements BookingService {
         Car car = carRepository.findById(dto.getCarId())
                 .orElseThrow(() -> new IllegalArgumentException("Car not found"));
 
+        // Vérifier les réservations CONFIRMED pour cette voiture
+        List<Booking> existingBookings = bookingRepository.findByCarIdAndBookingStatus(
+                car.getId(),
+                BookingStatus.CONFIRMED
+        );
+
+        for (Booking existing : existingBookings) {
+            boolean overlap = !(dto.getEndDate().isBefore(existing.getStartDate())
+                    || dto.getStartDate().isAfter(existing.getEndDate()));
+
+            if (overlap) {
+                throw new IllegalStateException("Car is already booked for the selected dates");
+            }
+        }
+
+        // Créer la réservation si pas de chevauchement
         Booking booking = bookingMapper.toEntity(dto);
         booking.setCustomer(customer);
         booking.setBookingStatus(BookingStatus.PENDING);
         booking.setTotalPrice(BigDecimal.ZERO);
 
-        // ✅ Utilisation de la méthode helper
         car.addBooking(booking);
 
         bookingRepository.save(booking);
         carRepository.save(car);
 
-        notificationService.sendBookingEndSoonNotification(customer, booking);
+        // Notification plus logique : "Booking Created"
+        notificationService.sendBookingCreatedNotification(customer, booking);
 
         return bookingMapper.toResponseDto(booking);
     }
@@ -56,12 +74,12 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
-        // Vérifier que l'employee existe (optionnel si tu veux tracer qui confirme)
         User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
 
-        // Mettre à jour le statut
-        booking.setBookingStatus(BookingStatus.CONFIRMED);
+        if (booking.getBookingStatus() != BookingStatus.PENDING) {
+            throw new IllegalStateException("Only pending bookings can be confirmed");
+        }
 
         // Calcul du prix total
         long days = ChronoUnit.DAYS.between(booking.getStartDate(), booking.getEndDate());
@@ -72,19 +90,29 @@ public class BookingServiceImpl implements BookingService {
                 .multiply(BigDecimal.valueOf(days));
         booking.setTotalPrice(totalPrice);
 
-        // Mettre à jour le statut de la voiture
-        booking.getCar().setRentalStatus(RentalStatus.RENTED);
+        // Statut du booking
+        booking.setBookingStatus(BookingStatus.CONFIRMED);
 
-        // Sauvegarde
+        // ⚠️ Ne pas mettre la voiture en RENTED ici
+        booking.getCar().setRentalStatus(RentalStatus.AVAILABLE);
+
         bookingRepository.save(booking);
 
-        // Notification (exemple : prévenir le client que sa réservation est confirmée)
+        // Génération automatique du contrat
+        Contract contract = Contract.builder()
+                .booking(booking)
+                .contractNumber("CTR-" + booking.getId())
+                .pdfPath("/contracts/CTR-" + booking.getId() + ".pdf")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        contractRepository.save(contract);
+
+        // Notifications
         notificationService.sendBookingConfirmedNotification(booking.getCustomer(), booking);
 
-        // Retour DTO via mapper
         return bookingMapper.toResponseDto(booking);
     }
-
     @Override
     public BookingResponseDTO rejectBooking(Long bookingId, String reason, Long employeeId) {
         Booking booking = bookingRepository.findById(bookingId)

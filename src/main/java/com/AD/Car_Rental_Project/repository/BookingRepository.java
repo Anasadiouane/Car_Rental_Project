@@ -1,8 +1,6 @@
 package com.AD.Car_Rental_Project.repository;
 
 import com.AD.Car_Rental_Project.domain.entity.Booking;
-import com.AD.Car_Rental_Project.domain.entity.Car;
-import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -33,4 +31,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Statistiques : nombre de réservations par mois
     @Query("SELECT MONTH(b.startDate), COUNT(b) FROM Booking b GROUP BY MONTH(b.startDate)")
     List<Object[]> countBookingsPerMonth();
+
+    List<Booking> findByCarIdAndBookingStatus(Long id, BookingStatus bookingStatus);
 }

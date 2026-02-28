@@ -4,6 +4,7 @@ import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Car;
 import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
+import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.TechnicalStatus;
 import com.AD.Car_Rental_Project.repository.BookingRepository;
 import com.AD.Car_Rental_Project.repository.CarRepository;
@@ -32,6 +33,21 @@ public class NotificationScheduler {
         for (Booking booking : bookings) {
             if (booking.getEndDate().minusDays(1).isEqual(today)) {
                 notificationService.sendBookingEndSoonNotification(booking.getCustomer(), booking);
+            }
+        }
+    }
+
+    // Vérifier les réservations qui commencent aujourd'hui
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void activateBookings() {
+        LocalDate today = LocalDate.now();
+        List<Booking> bookings = bookingRepository.findByBookingStatus(BookingStatus.CONFIRMED);
+
+        for (Booking booking : bookings) {
+            if (booking.getStartDate().isEqual(today)) {
+                booking.getCar().setRentalStatus(RentalStatus.RENTED);
+                bookingRepository.save(booking);
+
             }
         }
     }
