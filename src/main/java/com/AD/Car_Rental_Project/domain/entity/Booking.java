@@ -42,9 +42,17 @@ public class Booking implements Serializable {
     @JoinColumn(name = "customer_id", nullable = false)
     private User customer; // role = CUSTOMER
 
+    @ManyToOne
+    @JoinColumn(name = "confirmed_by_id")
+    private User confirmedBy; // role = EMPLOYEE
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "car_id", nullable = false)
     private Car car;
+
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Payment payment;
+
 
     // ================= Booking Info =================
     @NotNull

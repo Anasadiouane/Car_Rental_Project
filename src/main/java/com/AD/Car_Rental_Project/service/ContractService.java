@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ContractService {
-    ContractResponseDTO generateContract(Long bookingId, String contractNumber, String pdfPath, Long employeeId);
+    void addContract(Long bookingId);
+    void generateContractPdf(Contract contract);
     ContractResponseDTO getContractByBooking(Long bookingId);
     ContractResponseDTO getContractByNumber(String contractNumber);
     List<ContractResponseDTO> getAllContracts();

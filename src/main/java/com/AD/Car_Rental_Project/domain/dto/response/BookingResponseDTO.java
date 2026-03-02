@@ -1,6 +1,7 @@
 package com.AD.Car_Rental_Project.domain.dto.response;
 
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
+import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -26,6 +27,7 @@ public class BookingResponseDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;
+    private PaymentStatus paymentStatus;
     private BookingStatus bookingStatus;
 }
 

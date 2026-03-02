@@ -5,11 +5,13 @@ import com.AD.Car_Rental_Project.domain.dto.response.BookingResponseDTO;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
 
 import com.AD.Car_Rental_Project.service.BookingService;
+import com.itextpdf.text.DocumentException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 
 @RestController
@@ -28,7 +30,7 @@ public class BookingController {
 
     @PutMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('EMPLOYEE','ADMIN')")
-    public ResponseEntity<BookingResponseDTO> confirmBooking(@PathVariable Long id, @RequestParam Long employeeId) {
+    public ResponseEntity<BookingResponseDTO> confirmBooking(@PathVariable Long id, @RequestParam Long employeeId) throws DocumentException, FileNotFoundException {
         return ResponseEntity.ok(bookingService.confirmBooking(id, employeeId));
     }
 

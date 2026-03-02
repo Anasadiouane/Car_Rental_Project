@@ -8,13 +8,16 @@ import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.domain.mapper.BookingMapper;
 import com.AD.Car_Rental_Project.repository.*;
 import com.AD.Car_Rental_Project.service.BookingService;
+import com.AD.Car_Rental_Project.service.ContractService;
 import com.AD.Car_Rental_Project.service.NotificationService;
+import com.itextpdf.text.DocumentException;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -29,6 +32,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
     private final NotificationService notificationService;
     private final ContractRepository contractRepository;
+    private final ContractService contractService;
 
     @Override
     public BookingResponseDTO createBooking(BookingRequestDTO dto) {
@@ -70,7 +74,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingResponseDTO confirmBooking(Long bookingId, Long employeeId) {
+    public BookingResponseDTO confirmBooking(Long bookingId, Long employeeId) throws FileNotFoundException, DocumentException {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
@@ -81,38 +85,28 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalStateException("Only pending bookings can be confirmed");
         }
 
-        // Calcul du prix total
         long days = ChronoUnit.DAYS.between(booking.getStartDate(), booking.getEndDate());
         if (days <= 0) {
             throw new IllegalArgumentException("End date must be after start date");
         }
+
         BigDecimal totalPrice = booking.getCar().getPricePerDay()
                 .multiply(BigDecimal.valueOf(days));
         booking.setTotalPrice(totalPrice);
-
-        // Statut du booking
         booking.setBookingStatus(BookingStatus.CONFIRMED);
+        booking.setConfirmedBy(employee);
 
-        // ⚠️ Ne pas mettre la voiture en RENTED ici
         booking.getCar().setRentalStatus(RentalStatus.AVAILABLE);
-
         bookingRepository.save(booking);
 
-        // Génération automatique du contrat
-        Contract contract = Contract.builder()
-                .booking(booking)
-                .contractNumber("CTR-" + booking.getId())
-                .pdfPath("/contracts/CTR-" + booking.getId() + ".pdf")
-                .createdAt(LocalDateTime.now())
-                .build();
 
-        contractRepository.save(contract);
+        contractService.addContract(bookingId);
 
-        // Notifications
         notificationService.sendBookingConfirmedNotification(booking.getCustomer(), booking);
 
         return bookingMapper.toResponseDto(booking);
     }
+
     @Override
     public BookingResponseDTO rejectBooking(Long bookingId, String reason, Long employeeId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -166,7 +160,7 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingResponseDTO> getAllBookings() {
         return bookingRepository.findAll()
                 .stream()
-                .map(bookingMapper::toResponseDto)   // utilisation du mapper
+                .map(bookingMapper::toResponseDto)
                 .toList();
     }
 
@@ -176,12 +170,12 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
         booking.setBookingStatus(BookingStatus.FINISHED);
+        booking.getCar().setRentalStatus(RentalStatus.AVAILABLE);
+
         bookingRepository.save(booking);
 
-        return bookingMapper.toResponseDto(booking); // utilisation du mapper
+        return bookingMapper.toResponseDto(booking);
     }
-
-
 
     @Override
     public List<BookingResponseDTO> getBookingsByStatus(BookingStatus status) {
