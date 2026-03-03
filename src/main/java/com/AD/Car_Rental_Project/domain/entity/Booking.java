@@ -50,7 +50,7 @@ public class Booking implements Serializable {
     @JoinColumn(name = "car_id", nullable = false)
     private Car car;
 
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Payment payment;
 
 

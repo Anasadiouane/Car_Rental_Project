@@ -51,8 +51,11 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.save(payment);
 
+        booking.setPayment(payment);
+        bookingRepository.save(booking);
+
         // Notification liée au BOOKING
-        notificationService.sendBookingEndSoonNotification(booking.getCustomer(), booking);
+        notificationService.sendPaymentNotification(booking.getCustomer(), booking);
 
         return paymentMapper.toResponseDto(payment);
     }

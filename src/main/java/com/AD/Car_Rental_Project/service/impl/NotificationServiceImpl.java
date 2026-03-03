@@ -75,6 +75,24 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void sendPaymentNotification(User user, Booking booking) {
+        Notification notification = Notification.builder()
+                .title("Payment Status")
+                .message("Your payment for booking #" + booking.getId() +
+                        " has been processed. Status: " + booking.getPayment().getPaymentStatus() +
+                        ", Amount: " + booking.getPayment().getAmount() + " MAD, Transaction ID: " + booking.getPayment().getTransactionId())
+                .notificationType(NotificationType.PAYMENT)
+                .relatedEntityId(booking.getId())
+                .relatedEntityType(RelatedEntityType.BOOKING)
+                .user(user)
+                .seen(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        notificationRepository.save(notification);
+    }
+
+    @Override
     public void sendBookingRejectedNotification(User user, Booking booking, String reason) {
         Notification notification = Notification.builder()
                 .title("Booking Rejected")

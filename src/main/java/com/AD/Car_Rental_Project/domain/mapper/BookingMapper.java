@@ -22,5 +22,6 @@ public interface BookingMapper {
     @Mapping(source = "car.brand", target = "carBrand")
     @Mapping(source = "car.model", target = "carModel")
     @Mapping(source = "car.plateNumber", target = "carPlateNumber")
+    @Mapping(source = "payment.paymentStatus", target = "paymentStatus")
     BookingResponseDTO toResponseDto(Booking booking);
 }

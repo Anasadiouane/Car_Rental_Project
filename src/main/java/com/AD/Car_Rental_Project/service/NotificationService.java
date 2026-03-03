@@ -26,4 +26,7 @@ public interface NotificationService {
     void sendBookingConfirmedNotification(User customer, Booking booking);
 
     void sendBookingCreatedNotification(User customer, Booking booking);
+
+    void sendPaymentNotification(User customer, Booking booking);
+
 }
