@@ -75,14 +75,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendPaymentNotification(User user, Booking booking) {
+    public void sendPaymentNotification(User user, Payment payment) {
         Notification notification = Notification.builder()
                 .title("Payment Status")
-                .message("Your payment for booking #" + booking.getId() +
-                        " has been processed. Status: " + booking.getPayment().getPaymentStatus() +
-                        ", Amount: " + booking.getPayment().getAmount() + " MAD, Transaction ID: " + booking.getPayment().getTransactionId())
+                .message("Your payment for booking #" + payment.getBooking().getId() +
+                        " has been processed. Status: " + payment.getBooking().getPaymentStatus() +
+                        ", Amount: " + payment.getAmount() + " MAD, Transaction ID: " + payment.getTransactionId())
                 .notificationType(NotificationType.PAYMENT)
-                .relatedEntityId(booking.getId())
+                .relatedEntityId(payment.getBooking().getId())
                 .relatedEntityType(RelatedEntityType.BOOKING)
                 .user(user)
                 .seen(false)

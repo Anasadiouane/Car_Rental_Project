@@ -5,6 +5,7 @@ import com.AD.Car_Rental_Project.domain.dto.response.PaymentResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.Booking;
 import com.AD.Car_Rental_Project.domain.entity.Payment;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
+import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 import com.AD.Car_Rental_Project.domain.mapper.PaymentMapper;
 import com.AD.Car_Rental_Project.repository.BookingRepository;
 import com.AD.Car_Rental_Project.repository.PaymentRepository;
@@ -31,62 +32,113 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponseDTO processPayment(PaymentRequestDTO dto) {
+
         Booking booking = bookingRepository.findById(dto.getBookingId())
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        BigDecimal totalPaid = paymentRepository.sumPaymentsByBookingId(booking.getId());
+
+        BigDecimal newTotal = totalPaid.add(dto.getAmount());
+
+        if (newTotal.compareTo(booking.getTotalPrice()) > 0) {
+            throw new IllegalArgumentException("Payment exceeds booking total price");
+        }
 
         Payment payment = paymentMapper.toEntity(dto);
         payment.setBooking(booking);
         payment.setPaymentDate(LocalDate.now());
         payment.setTransactionId(UUID.randomUUID().toString());
 
-        // Déterminer le statut du paiement
-        BigDecimal total = booking.getTotalPrice();
-        if (dto.getAmount().compareTo(total) >= 0) {
-            payment.setPaymentStatus(PaymentStatus.PAID);
-        } else if (dto.getAmount().compareTo(BigDecimal.ZERO) > 0) {
-            payment.setPaymentStatus(PaymentStatus.PARTIAL);
-        } else {
-            payment.setPaymentStatus(PaymentStatus.UNPAID);
-        }
-
         paymentRepository.save(payment);
 
-        booking.setPayment(payment);
-        bookingRepository.save(booking);
+        updateBookingPaymentStatus(booking);
 
-        // Notification liée au BOOKING
-        notificationService.sendPaymentNotification(booking.getCustomer(), booking);
+        notificationService.sendPaymentNotification(booking.getCustomer(), payment);
 
         return paymentMapper.toResponseDto(payment);
     }
 
     @Override
-    public PaymentResponseDTO getPaymentByBooking(Long bookingId) {
-        Payment payment = paymentRepository.findByBookingId(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+    public PaymentResponseDTO payRemainingAmount(Long bookingId, PaymentType paymentType) {
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        BigDecimal totalPaid = paymentRepository.sumPaymentsByBookingId(bookingId);
+
+        BigDecimal remaining = booking.getTotalPrice().subtract(totalPaid);
+
+        if (remaining.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Booking already fully paid");
+        }
+
+        Payment payment = new Payment();
+        payment.setBooking(booking);
+        payment.setAmount(remaining);
+        payment.setPaymentType(paymentType);
+        payment.setPaymentDate(LocalDate.now());
+        if(paymentType == PaymentType.CARD){
+            payment.setTransactionId("CARD-" + UUID.randomUUID());
+        }
+        else if(paymentType == PaymentType.TRANSFER){
+            payment.setTransactionId("TRX-" + UUID.randomUUID());
+        }else {
+            payment.setTransactionId("CASH-" + UUID.randomUUID());
+        }
+
+
+        paymentRepository.save(payment);
+
+        updateBookingPaymentStatus(booking);
+
+        notificationService.sendPaymentNotification(booking.getCustomer(), payment);
+
         return paymentMapper.toResponseDto(payment);
+    }
+
+    @Override
+    public List<PaymentResponseDTO> getPaymentsByBooking(Long bookingId) {
+
+        return paymentRepository.findByBookingId(bookingId)
+                .stream()
+                .map(paymentMapper::toResponseDto)
+                .toList();
     }
 
     @Override
     public PaymentResponseDTO getPaymentByTransactionId(String transactionId) {
+
         Payment payment = paymentRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+
         return paymentMapper.toResponseDto(payment);
     }
 
     @Override
-    public List<PaymentResponseDTO> getPaymentsByStatus(PaymentStatus status) {
-        return paymentRepository.findByPaymentStatus(status)
+    public List<PaymentResponseDTO> getAllPayments() {
+
+        return paymentRepository.findAll()
                 .stream()
                 .map(paymentMapper::toResponseDto)
                 .toList();
     }
 
-    @Override
-    public List<PaymentResponseDTO> getAllPayments() {
-        return paymentRepository.findAll()
-                .stream()
-                .map(paymentMapper::toResponseDto)
-                .toList();
+    // ================= Helper =================
+
+    private void updateBookingPaymentStatus(Booking booking) {
+
+        BigDecimal totalPaid = paymentRepository.sumPaymentsByBookingId(booking.getId());
+
+        if (totalPaid.compareTo(booking.getTotalPrice()) >= 0) {
+            booking.setPaymentStatus(PaymentStatus.PAID);
+        }
+        else if (totalPaid.compareTo(BigDecimal.ZERO) > 0) {
+            booking.setPaymentStatus(PaymentStatus.PARTIAL);
+        }
+        else {
+            booking.setPaymentStatus(PaymentStatus.UNPAID);
+        }
+
+        bookingRepository.save(booking);
     }
 }

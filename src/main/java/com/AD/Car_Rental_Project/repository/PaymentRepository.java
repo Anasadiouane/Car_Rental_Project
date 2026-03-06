@@ -1,13 +1,12 @@
 package com.AD.Car_Rental_Project.repository;
 
 import com.AD.Car_Rental_Project.domain.entity.Payment;
-import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
-import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,10 +17,14 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByTransactionId(String transactionId);
 
     // Trouver les paiements liés à une réservation
-    Optional<Payment> findByBookingId(Long bookingId);
+    List<Payment> findByBookingId(Long bookingId);
 
-    // Filtrer les paiements par statut
-    List<Payment> findByPaymentStatus(PaymentStatus status);
+    @Query("""
+       SELECT COALESCE(SUM(p.amount),0)
+       FROM Payment p
+       WHERE p.booking.id = :bookingId
+       """)
+    BigDecimal sumPaymentsByBookingId(@Param("bookingId") Long bookingId);
 
     // Statistiques : revenus générés par mois
     @Query("SELECT MONTH(p.paymentDate), SUM(p.amount) FROM Payment p GROUP BY MONTH(p.paymentDate)")

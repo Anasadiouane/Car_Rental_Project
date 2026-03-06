@@ -20,6 +20,6 @@ public interface PaymentMapper {
     @Mapping(source = "booking.car.model", target = "carModel")
     @Mapping(source = "booking.car.plateNumber", target = "carPlateNumber")
     @Mapping(source = "booking.totalPrice", target = "totalPrice")
-    @Mapping(source = "paymentStatus", target = "paymentStatus")
+    @Mapping(source = "booking.paymentStatus", target = "paymentStatus")
     PaymentResponseDTO toResponseDto(Payment payment);
 }

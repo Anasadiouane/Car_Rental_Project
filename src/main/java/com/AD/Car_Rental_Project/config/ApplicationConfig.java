@@ -1,5 +1,6 @@
 package com.AD.Car_Rental_Project.config;
 
+import com.AD.Car_Rental_Project.auth.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

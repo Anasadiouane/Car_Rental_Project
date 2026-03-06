@@ -1,4 +1,4 @@
-package com.AD.Car_Rental_Project.config;
+package com.AD.Car_Rental_Project.auth;
 
 import com.AD.Car_Rental_Project.domain.entity.User;
 import com.AD.Car_Rental_Project.domain.enumeration.Role;

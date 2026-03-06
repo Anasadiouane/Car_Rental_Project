@@ -1,6 +1,5 @@
 package com.AD.Car_Rental_Project.domain.entity;
 
-import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.PaymentType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -51,9 +50,6 @@ public class Payment implements Serializable {
     @Column(nullable = false, length = 30)
     private PaymentType paymentType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private PaymentStatus paymentStatus;
 
     @NotNull
     @Column(nullable = false)
@@ -72,8 +68,8 @@ public class Payment implements Serializable {
     private LocalDateTime updatedAt;
 
     // ================= Relationship =================
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "booking_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
     // ================= Equals & HashCode =================

@@ -1,4 +1,4 @@
-package com.AD.Car_Rental_Project.config;
+package com.AD.Car_Rental_Project.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

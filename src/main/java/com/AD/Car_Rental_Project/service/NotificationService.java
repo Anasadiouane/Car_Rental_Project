@@ -2,12 +2,8 @@ package com.AD.Car_Rental_Project.service;
 
 import com.AD.Car_Rental_Project.domain.dto.response.NotificationResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.*;
-import com.AD.Car_Rental_Project.domain.enumeration.NotificationType;
-import com.AD.Car_Rental_Project.domain.enumeration.RelatedEntityType;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface NotificationService {
     void sendBookingEndSoonNotification(User user, Booking booking);
@@ -27,6 +23,6 @@ public interface NotificationService {
 
     void sendBookingCreatedNotification(User customer, Booking booking);
 
-    void sendPaymentNotification(User customer, Booking booking);
+    void sendPaymentNotification(User customer, Payment payment);
 
 }

@@ -1,6 +1,7 @@
 package com.AD.Car_Rental_Project.domain.entity;
 
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
+import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -11,6 +12,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Booking entity representing a reservation made by a customer.
@@ -50,8 +53,8 @@ public class Booking implements Serializable {
     @JoinColumn(name = "car_id", nullable = false)
     private Car car;
 
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
-    private Payment payment;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Payment> payments = new ArrayList<>();
 
 
     // ================= Booking Info =================
@@ -69,7 +72,11 @@ public class Booking implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private BookingStatus bookingStatus;
+    private BookingStatus bookingStatus = BookingStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
 
     // ================= Audit =================
     @CreationTimestamp
