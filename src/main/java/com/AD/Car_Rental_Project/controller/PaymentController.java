@@ -39,14 +39,14 @@ public class PaymentController {
 
     // ================= Get payments by booking =================
     @GetMapping("/booking/{bookingId}")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','ADMIN')")
     public ResponseEntity<List<PaymentResponseDTO>> getPaymentsByBooking(@PathVariable Long bookingId) {
         return ResponseEntity.ok(paymentService.getPaymentsByBooking(bookingId));
     }
 
     // ================= Get payment by transaction ID =================
     @GetMapping("/transaction/{transactionId}")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','ADMIN')")
     public ResponseEntity<PaymentResponseDTO> getPaymentByTransactionId(@PathVariable String transactionId) {
         return ResponseEntity.ok(paymentService.getPaymentByTransactionId(transactionId));
     }

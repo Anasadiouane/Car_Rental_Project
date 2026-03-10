@@ -14,12 +14,12 @@ public class BookingResponseDTO {
     private Long id;
 
     // Infos client
-    private Long customerId;
+    //private Long customerId;
     private String customerName;
     private String customerEmail;
 
     // Infos voiture
-    private Long carId;
+    //private Long carId;
     private String carBrand;
     private String carModel;
     private String carPlateNumber;
@@ -27,6 +27,7 @@ public class BookingResponseDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;
+    private BigDecimal amount;
     private PaymentStatus paymentStatus;
     private BookingStatus bookingStatus;
 }

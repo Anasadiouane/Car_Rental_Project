@@ -47,7 +47,12 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentMapper.toEntity(dto);
         payment.setBooking(booking);
         payment.setPaymentDate(LocalDate.now());
-        payment.setTransactionId(UUID.randomUUID().toString());
+
+        switch (payment.getPaymentType()){
+            case PaymentType.CARD : payment.setTransactionId("CARD-" + UUID.randomUUID());
+            case PaymentType.TRANSFER : payment.setTransactionId("TRX-" + UUID.randomUUID());
+            case PaymentType.CASH : payment.setTransactionId("CASH-" + UUID.randomUUID());
+        }
 
         paymentRepository.save(payment);
 
@@ -58,6 +63,8 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.toResponseDto(payment);
     }
 
+    /// khassni nziiid update payment walakin 3ndna 2 payments!!! machi saave khass nzido!?
+    /// khass nzid amount! f pay remaining olla deja kat7ssb blreste ???
     @Override
     public PaymentResponseDTO payRemainingAmount(Long bookingId, PaymentType paymentType) {
 
@@ -77,13 +84,11 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setAmount(remaining);
         payment.setPaymentType(paymentType);
         payment.setPaymentDate(LocalDate.now());
-        if(paymentType == PaymentType.CARD){
-            payment.setTransactionId("CARD-" + UUID.randomUUID());
-        }
-        else if(paymentType == PaymentType.TRANSFER){
-            payment.setTransactionId("TRX-" + UUID.randomUUID());
-        }else {
-            payment.setTransactionId("CASH-" + UUID.randomUUID());
+
+        switch (paymentType){
+            case PaymentType.CARD : payment.setTransactionId("CARD-" + UUID.randomUUID());
+            case PaymentType.TRANSFER : payment.setTransactionId("TRX-" + UUID.randomUUID());
+            case PaymentType.CASH : payment.setTransactionId("CASH-" + UUID.randomUUID());
         }
 
 

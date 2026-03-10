@@ -15,13 +15,18 @@ public interface BookingMapper {
     @Mapping(target = "bookingStatus", ignore = true) // défini dans service
     Booking toEntity(BookingRequestDTO dto);
 
-    @Mapping(source = "customer.id", target = "customerId")
+    //@Mapping(source = "customer.id", target = "customerId")
     @Mapping(source = "customer.fullName", target = "customerName")
     @Mapping(source = "customer.email", target = "customerEmail")
-    @Mapping(source = "car.id", target = "carId")
+    //@Mapping(source = "car.id", target = "carId")
     @Mapping(source = "car.brand", target = "carBrand")
     @Mapping(source = "car.model", target = "carModel")
     @Mapping(source = "car.plateNumber", target = "carPlateNumber")
     @Mapping(source = "paymentStatus", target = "paymentStatus")
+    @Mapping(target = "amount", expression = "java("
+            +"booking.getPayments() == null ? java.math.BigDecimal.ZERO :"
+            +"booking.getPayments().stream()"
+            +" .map(p -> p.getAmount())"
+            +".reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add))")
     BookingResponseDTO toResponseDto(Booking booking);
 }

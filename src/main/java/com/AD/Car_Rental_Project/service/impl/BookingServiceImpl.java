@@ -4,6 +4,7 @@ import com.AD.Car_Rental_Project.domain.dto.request.BookingRequestDTO;
 import com.AD.Car_Rental_Project.domain.dto.response.BookingResponseDTO;
 import com.AD.Car_Rental_Project.domain.entity.*;
 import com.AD.Car_Rental_Project.domain.enumeration.BookingStatus;
+import com.AD.Car_Rental_Project.domain.enumeration.PaymentStatus;
 import com.AD.Car_Rental_Project.domain.enumeration.RentalStatus;
 import com.AD.Car_Rental_Project.domain.mapper.BookingMapper;
 import com.AD.Car_Rental_Project.repository.*;
@@ -31,7 +32,6 @@ public class BookingServiceImpl implements BookingService {
     private final CarRepository carRepository;
     private final BookingMapper bookingMapper;
     private final NotificationService notificationService;
-    private final ContractRepository contractRepository;
     private final ContractService contractService;
 
     @Override
@@ -40,6 +40,11 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
         Car car = carRepository.findById(dto.getCarId())
                 .orElseThrow(() -> new IllegalArgumentException("Car not found"));
+
+        long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate());
+        if (days <= 0) {
+            throw new IllegalArgumentException("End date must be after start date");
+        }
 
         // Vérifier les réservations CONFIRMED pour cette voiture
         List<Booking> existingBookings = bookingRepository.findByCarIdAndBookingStatus(
@@ -59,10 +64,14 @@ public class BookingServiceImpl implements BookingService {
         // Créer la réservation si pas de chevauchement
         Booking booking = bookingMapper.toEntity(dto);
         booking.setCustomer(customer);
+        booking.setPaymentStatus(PaymentStatus.UNPAID);
         booking.setBookingStatus(BookingStatus.PENDING);
-        booking.setTotalPrice(BigDecimal.ZERO);
+
+        BigDecimal totalPrice = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
+        booking.setTotalPrice(totalPrice);
 
         car.addBooking(booking);
+
 
         bookingRepository.save(booking);
         carRepository.save(car);
@@ -85,20 +94,12 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalStateException("Only pending bookings can be confirmed");
         }
 
-        long days = ChronoUnit.DAYS.between(booking.getStartDate(), booking.getEndDate());
-        if (days <= 0) {
-            throw new IllegalArgumentException("End date must be after start date");
-        }
 
-        BigDecimal totalPrice = booking.getCar().getPricePerDay()
-                .multiply(BigDecimal.valueOf(days));
-        booking.setTotalPrice(totalPrice);
         booking.setBookingStatus(BookingStatus.CONFIRMED);
         booking.setConfirmedBy(employee);
 
         booking.getCar().setRentalStatus(RentalStatus.AVAILABLE);
         bookingRepository.save(booking);
-
 
         contractService.addContract(bookingId);
 

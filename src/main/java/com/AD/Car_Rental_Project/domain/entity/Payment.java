@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "payments",
         indexes = {
-                @Index(name = "idx_payment_status", columnList = "paymentStatus"),
                 @Index(name = "idx_payment_type", columnList = "paymentType"),
                 @Index(name = "idx_payment_transaction", columnList = "transactionId", unique = true)
         })
@@ -55,7 +54,7 @@ public class Payment implements Serializable {
     @Column(nullable = false)
     private LocalDate paymentDate;
 
-    @Column(length = 100, unique = true)
+    @Column(length = 200, unique = true)
     private String transactionId;
 
     // ================= Audit =================

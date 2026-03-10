@@ -23,7 +23,8 @@ import java.util.List;
 @Table(name = "bookings",
         indexes = {
                 @Index(name = "idx_booking_status", columnList = "bookingStatus"),
-                @Index(name = "idx_booking_dates", columnList = "startDate,endDate")
+                @Index(name = "idx_booking_dates", columnList = "startDate,endDate"),
+                @Index(name = "idx_payment_status", columnList = "paymentStatus")
         })
 @Getter
 @Setter
