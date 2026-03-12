@@ -32,7 +32,6 @@ public class ContractServiceImpl implements ContractService {
     private final UserRepository userRepository;
     private final ContractMapper contractMapper;
 
-    // ✅ Génération du PDF (appelée depuis BookingService après création du contrat)
     @Override
     public void generateContractPdf(Contract contract) {
         try {
@@ -125,10 +124,8 @@ public class ContractServiceImpl implements ContractService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
-        // Construire le chemin du PDF
         String pdfPath = "contracts/CTR-" + booking.getId() + ".pdf";
 
-        // Créer le contrat
         Contract contract = Contract.builder()
                 .booking(booking)
                 .contractNumber("CTR-" + booking.getId())
@@ -136,10 +133,8 @@ public class ContractServiceImpl implements ContractService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Sauvegarder en base
         contractRepository.save(contract);
 
-        // Générer le PDF
         generateContractPdf(contract);
     }
 

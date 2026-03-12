@@ -17,5 +17,6 @@ public interface ContractMapper {
     @Mapping(source = "booking.startDate", target = "startDate")
     @Mapping(source = "booking.endDate", target = "endDate")
     @Mapping(source = "booking.totalPrice", target = "totalPrice")
+    @Mapping(source = "booking.confirmedBy.fullName", target = "confirmedBy")
     ContractResponseDTO toResponseDto(Contract contract);
 }

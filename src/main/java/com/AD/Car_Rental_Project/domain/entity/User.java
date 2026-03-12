@@ -54,7 +54,7 @@ public class User implements Serializable {
 
     @NotBlank
     @Column(nullable = false)
-    private String password; // ⚠️ Encode with BCrypt before storage
+    private String password;
 
     @Column(length = 20)
     private String phone;

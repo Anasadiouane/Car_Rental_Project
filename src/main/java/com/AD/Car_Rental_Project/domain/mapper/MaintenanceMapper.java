@@ -9,8 +9,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface MaintenanceMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "car", ignore = true)     // injecté via service
-    @Mapping(target = "createdBy", ignore = true) // injecté via service
+    @Mapping(target = "car", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     Maintenance toEntity(MaintenanceRequestDTO dto);
 
     @Mapping(source = "car.plateNumber", target = "carPlateNumber")

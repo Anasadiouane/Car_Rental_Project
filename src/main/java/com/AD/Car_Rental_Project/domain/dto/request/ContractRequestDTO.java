@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 public class ContractRequestDTO {
     @NotNull
-    private Long bookingId;        // référence vers la réservation
+    private Long bookingId;
 
-    private String pdfPath;        // chemin du fichier PDF
+    private String pdfPath;
 }

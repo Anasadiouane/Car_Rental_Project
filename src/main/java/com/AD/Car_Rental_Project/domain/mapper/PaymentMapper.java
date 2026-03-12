@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PaymentMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "booking", ignore = true) // injecté via service
+    @Mapping(target = "booking", ignore = true)
     Payment toEntity(PaymentRequestDTO dto);
 
     @Mapping(source = "booking.customer.fullName", target = "customerName")

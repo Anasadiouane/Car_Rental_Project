@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface NotificationMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true) // injecté via service
+    @Mapping(target = "user", ignore = true)
     Notification toEntity(NotificationRequestDTO dto);
 
     @Mapping(source = "user.fullName", target = "userFullName")

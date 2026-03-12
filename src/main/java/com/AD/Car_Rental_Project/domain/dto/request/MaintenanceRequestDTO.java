@@ -12,13 +12,13 @@ import lombok.*;
 @Builder
 public class MaintenanceRequestDTO {
     @NotNull
-    private Long carId;                // référence vers la voiture
+    private Long carId;
 
     @NotNull
-    private Long userId;               // référence vers l’utilisateur (EMPLOYEE)
+    private Long userId;
 
     @NotNull
-    private MaintenanceType maintenanceType; // type de maintenance
+    private MaintenanceType maintenanceType;
 
     @Size(max = 500)
     private String note;
@@ -27,5 +27,5 @@ public class MaintenanceRequestDTO {
     private LocalDate maintenanceDate;
 
     @FutureOrPresent
-    private LocalDate nextDueDate;     // prochaine échéance
+    private LocalDate nextDueDate;
 }

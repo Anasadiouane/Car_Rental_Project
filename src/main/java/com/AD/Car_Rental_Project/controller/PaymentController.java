@@ -29,7 +29,7 @@ public class PaymentController {
 
     // ================= Pay remaining amount =================
     @PostMapping("/remaining/{bookingId}")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','ADMIN')")
     public ResponseEntity<PaymentResponseDTO> payRemainingAmount(
             @PathVariable Long bookingId,
             @RequestParam("paymentType") PaymentType paymentType) {
